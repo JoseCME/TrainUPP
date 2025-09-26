@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lesiones y Limitaciones"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Selecciona las lesiones o limitaciones que tengas actualmente para adaptar tus rutinas:"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <CheckBox
+            android:id="@+id/cbShoulderInjury"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lesión de hombro"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbKneeInjury"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lesión de rodilla"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbLowerBackInjury"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lesión de espalda baja"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbWristInjury"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lesión de muñeca"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbAnkleInjury"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lesión de tobillo"
+            android:layout_marginBottom="8dp" />
+
+        <CheckBox
+            android:id="@+id/cbNeckInjury"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lesión de cuello"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Otras lesiones o limitaciones:"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etAdditionalInjuries"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Describe cualquier otra lesión o limitación"
+                android:inputType="textMultiLine"
+                android:lines="3" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
+</ScrollView>
