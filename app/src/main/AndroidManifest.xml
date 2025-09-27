@@ -71,6 +71,15 @@
                 android:value=".MainActivity" />
         </activity>
 
+        <!-- ChatIAActivity - Chat con IA Coach (Ventana flotante adaptable) -->
+        <activity
+            android:name=".ChatIAActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FloatingDialog"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="unspecified"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" />
+
     </application>
 
 </manifest>

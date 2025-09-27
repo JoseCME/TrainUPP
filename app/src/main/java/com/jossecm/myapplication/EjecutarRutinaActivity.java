@@ -1,6 +1,7 @@
 package com.jossecm.myapplication;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -174,43 +175,11 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
 
         // NUEVO: Configurar FloatingActionButton del chat de IA
         fabChatIA.setOnClickListener(v -> {
-            // Modo de prueba para el chat de IA
-            mostrarDialogoChatIA();
+            // Abrir ChatIAActivity real
+            Intent intent = new Intent(EjecutarRutinaActivity.this, ChatIAActivity.class);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_up, R.anim.fade_out);
         });
-    }
-
-    // NUEVO: Método para mostrar diálogo de chat de IA (modo prueba)
-    private void mostrarDialogoChatIA() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("🤖 Asistente de IA");
-        builder.setMessage("¡Funcionalidad de chat de IA en desarrollo!\n\n" +
-                "Próximamente podrás:\n" +
-                "• Pedir consejos sobre ejercicios\n" +
-                "• Sugerencias de peso y repeticiones\n" +
-                "• Recomendaciones de descanso\n" +
-                "• Análisis de tu progreso\n\n" +
-                "Esta función estará disponible pronto.");
-
-        builder.setPositiveButton("¡Entendido!", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                // Log para debugging
-                android.util.Log.d("EjecutarRutinaActivity",
-                        "Usuario interactuó con el chat de IA");
-            }
-        });
-
-        builder.setNeutralButton("Feedback", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Toast.makeText(EjecutarRutinaActivity.this,
-                        "Gracias por tu interés. ¡Implementaremos esta función pronto!",
-                        Toast.LENGTH_LONG).show();
-            }
-        });
-
-        builder.show();
     }
 
     private void loadRutina() {

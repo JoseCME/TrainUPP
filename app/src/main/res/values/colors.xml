@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="light_gray">#F5F5F5</color>
-</resources>
 
+    <!-- Colores para el sistema de chat -->
+    <color name="chat_background">#F0F0F0</color>
+    <color name="message_user_bg">#2196F3</color>
+    <color name="message_ia_bg">#FFFFFF</color>
+    <color name="typing_indicator_bg">#E8E8E8</color>
+
+    <!-- Colores del tema principal -->
+    <color name="primary">#1976D2</color>
+    <color name="primary_dark">#1565C0</color>
+    <color name="accent">#03DAC5</color>
+</resources>
