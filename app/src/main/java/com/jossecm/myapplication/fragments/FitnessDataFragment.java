@@ -76,23 +76,23 @@ public class FitnessDataFragment extends Fragment {
         // Establecer nivel de experiencia
         int experienceId = rgExperienceLevel.getCheckedRadioButtonId();
         if (experienceId == R.id.rbBeginner) {
-            user.setExperienceLevel(User.ExperienceLevel.BEGINNER);
+            user.setExperienceLevel("Principiante");
         } else if (experienceId == R.id.rbIntermediate) {
-            user.setExperienceLevel(User.ExperienceLevel.INTERMEDIATE);
+            user.setExperienceLevel("Intermedio");
         } else if (experienceId == R.id.rbAdvanced) {
-            user.setExperienceLevel(User.ExperienceLevel.ADVANCED);
+            user.setExperienceLevel("Avanzado");
         }
 
         // Establecer objetivo fitness
         int goalId = rgFitnessGoal.getCheckedRadioButtonId();
         if (goalId == R.id.rbLoseWeight) {
-            user.setFitnessGoal(User.FitnessGoal.LOSE_WEIGHT);
+            user.setFitnessGoal("Perder peso");
         } else if (goalId == R.id.rbGainMuscle) {
-            user.setFitnessGoal(User.FitnessGoal.GAIN_MUSCLE);
+            user.setFitnessGoal("Ganar masa muscular");
         } else if (goalId == R.id.rbMaintenance) {
-            user.setFitnessGoal(User.FitnessGoal.MAINTENANCE);
+            user.setFitnessGoal("Mantener peso");
         } else if (goalId == R.id.rbStrength) {
-            user.setFitnessGoal(User.FitnessGoal.STRENGTH);
+            user.setFitnessGoal("Ganar fuerza");
         }
 
         // Establecer días por semana

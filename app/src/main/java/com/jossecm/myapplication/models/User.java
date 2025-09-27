@@ -1,13 +1,13 @@
 package com.jossecm.myapplication.models;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 import com.jossecm.myapplication.database.Converters;
 import java.util.List;
 
 @Entity(tableName = "users")
-@TypeConverters(Converters.class)
 public class User {
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -15,103 +15,158 @@ public class User {
     // Datos personales
     private String name;
     private int age;
-    private double height; // en cm
-    private double weight; // en kg
-    private Gender gender;
-    private double bmi; // calculado automáticamente
+    private String gender; // "Masculino", "Femenino", etc.
 
-    // Datos fitness
-    private ExperienceLevel experienceLevel;
-    private FitnessGoal fitnessGoal;
-    private int daysPerWeek;
+    // Datos físicos
+    private float weight; // kg
+    private float height; // cm
 
-    // Equipamiento seleccionado (IDs de la API)
+    // Datos de fitness
+    private String fitnessLevel; // "Principiante", "Intermedio", "Avanzado"
+    private String goal; // "Perder peso", "Ganar masa muscular", etc.
+
+    // Equipamiento y preferencias
+    @TypeConverters(Converters.class)
     private List<Integer> selectedEquipmentIds;
 
-    // Lesiones
-    private List<String> injuries;
-    private String additionalInjuries;
+    @TypeConverters(Converters.class)
+    private List<String> injuries; // Lista de lesiones
 
-    // Preferencias
-    private boolean wantsAiRoutines;
+    private boolean useAI; // Preferencia de uso de IA
 
-    public enum Gender {
-        MALE, FEMALE
-    }
-
-    public enum ExperienceLevel {
-        BEGINNER, INTERMEDIATE, ADVANCED
-    }
-
-    public enum FitnessGoal {
-        LOSE_WEIGHT, GAIN_MUSCLE, MAINTENANCE, STRENGTH
-    }
-
-    // Constructor vacío para Room
+    // Constructor vacío requerido por Room
     public User() {}
 
-    // Getters y Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public int getAge() { return age; }
-    public void setAge(int age) { this.age = age; }
-
-    public double getHeight() { return height; }
-    public void setHeight(double height) {
-        this.height = height;
-        calculateBMI();
-    }
-
-    public double getWeight() { return weight; }
-    public void setWeight(double weight) {
+    // Constructor completo
+    @Ignore
+    public User(String name, int age, String gender, float weight, float height,
+                String fitnessLevel, String goal, List<Integer> selectedEquipmentIds,
+                List<String> injuries, boolean useAI) {
+        this.name = name;
+        this.age = age;
+        this.gender = gender;
         this.weight = weight;
-        calculateBMI();
+        this.height = height;
+        this.fitnessLevel = fitnessLevel;
+        this.goal = goal;
+        this.selectedEquipmentIds = selectedEquipmentIds;
+        this.injuries = injuries;
+        this.useAI = useAI;
     }
 
-    public Gender getGender() { return gender; }
-    public void setGender(Gender gender) { this.gender = gender; }
+    // Getters y setters
+    public int getId() {
+        return id;
+    }
 
-    public double getBmi() { return bmi; }
-    public void setBmi(double bmi) { this.bmi = bmi; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public ExperienceLevel getExperienceLevel() { return experienceLevel; }
-    public void setExperienceLevel(ExperienceLevel experienceLevel) { this.experienceLevel = experienceLevel; }
+    public String getName() {
+        return name;
+    }
 
-    public FitnessGoal getFitnessGoal() { return fitnessGoal; }
-    public void setFitnessGoal(FitnessGoal fitnessGoal) { this.fitnessGoal = fitnessGoal; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public int getDaysPerWeek() { return daysPerWeek; }
-    public void setDaysPerWeek(int daysPerWeek) { this.daysPerWeek = daysPerWeek; }
+    public int getAge() {
+        return age;
+    }
 
-    public List<Integer> getSelectedEquipmentIds() { return selectedEquipmentIds; }
-    public void setSelectedEquipmentIds(List<Integer> selectedEquipmentIds) { this.selectedEquipmentIds = selectedEquipmentIds; }
+    public void setAge(int age) {
+        this.age = age;
+    }
 
-    public List<String> getInjuries() { return injuries; }
-    public void setInjuries(List<String> injuries) { this.injuries = injuries; }
+    public String getGender() {
+        return gender;
+    }
 
-    public String getAdditionalInjuries() { return additionalInjuries; }
-    public void setAdditionalInjuries(String additionalInjuries) { this.additionalInjuries = additionalInjuries; }
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
 
-    public boolean isWantsAiRoutines() { return wantsAiRoutines; }
-    public void setWantsAiRoutines(boolean wantsAiRoutines) { this.wantsAiRoutines = wantsAiRoutines; }
+    public float getWeight() {
+        return weight;
+    }
 
-    // Método para calcular BMI automáticamente
-    private void calculateBMI() {
-        if (height > 0 && weight > 0) {
-            double heightInMeters = height / 100.0;
-            this.bmi = weight / (heightInMeters * heightInMeters);
+    public void setWeight(float weight) {
+        this.weight = weight;
+    }
+
+    public float getHeight() {
+        return height;
+    }
+
+    public void setHeight(float height) {
+        this.height = height;
+    }
+
+    public String getFitnessLevel() {
+        return fitnessLevel;
+    }
+
+    public void setFitnessLevel(String fitnessLevel) {
+        this.fitnessLevel = fitnessLevel;
+    }
+
+    public String getGoal() {
+        return goal;
+    }
+
+    public void setGoal(String goal) {
+        this.goal = goal;
+    }
+
+    public List<Integer> getSelectedEquipmentIds() {
+        return selectedEquipmentIds;
+    }
+
+    public void setSelectedEquipmentIds(List<Integer> selectedEquipmentIds) {
+        this.selectedEquipmentIds = selectedEquipmentIds;
+    }
+
+    public List<String> getInjuries() {
+        return injuries;
+    }
+
+    public void setInjuries(List<String> injuries) {
+        this.injuries = injuries;
+    }
+
+    public boolean isUseAI() {
+        return useAI;
+    }
+
+    public void setUseAI(boolean useAI) {
+        this.useAI = useAI;
+    }
+
+    // Métodos auxiliares para compatibilidad con fragmentos existentes
+    public void setWantsAiRoutines(boolean wantsAi) {
+        this.useAI = wantsAi;
+    }
+
+    public void setExperienceLevel(String level) {
+        this.fitnessLevel = level;
+    }
+
+    public void setFitnessGoal(String goal) {
+        this.goal = goal;
+    }
+
+    public void setDaysPerWeek(int days) {
+        // Campo no usado en el modelo simplificado, se ignora
+    }
+
+    public void setAdditionalInjuries(String additionalInjuries) {
+        // Agregar lesiones adicionales a la lista existente
+        if (this.injuries == null) {
+            this.injuries = new java.util.ArrayList<>();
         }
-    }
-
-    // Método para obtener descripción del BMI
-    public String getBMIDescription() {
-        if (bmi < 18.5) return "Bajo peso";
-        else if (bmi < 25) return "Peso normal";
-        else if (bmi < 30) return "Sobrepeso";
-        else return "Obesidad";
+        if (additionalInjuries != null && !additionalInjuries.trim().isEmpty()) {
+            this.injuries.add(additionalInjuries);
+        }
     }
 }

@@ -114,13 +114,13 @@ public class PersonalDataFragment extends Fragment {
 
         user.setName(etName.getText().toString().trim());
         user.setAge(Integer.parseInt(etAge.getText().toString().trim()));
-        user.setHeight(Double.parseDouble(etHeight.getText().toString().trim()));
-        user.setWeight(Double.parseDouble(etWeight.getText().toString().trim()));
+        user.setHeight((float)Double.parseDouble(etHeight.getText().toString().trim()));
+        user.setWeight((float)Double.parseDouble(etWeight.getText().toString().trim()));
 
         if (rgGender.getCheckedRadioButtonId() == R.id.rbMale) {
-            user.setGender(User.Gender.MALE);
+            user.setGender("Masculino");
         } else {
-            user.setGender(User.Gender.FEMALE);
+            user.setGender("Femenino");
         }
     }
 }

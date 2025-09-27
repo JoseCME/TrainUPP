@@ -14,6 +14,8 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.jossecm.myapplication.fragments.HomeFragment;
+import com.jossecm.myapplication.fragments.HistorialFragment;
+import com.jossecm.myapplication.fragments.PerfilFragment;
 import com.jossecm.myapplication.repository.FitnessRepository;
 
 public class MainActivity extends AppCompatActivity {
@@ -75,16 +77,14 @@ public class MainActivity extends AppCompatActivity {
 
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
-                selectedFragment = HomeFragment.newInstance();
-            } else if (itemId == R.id.nav_routines) {
-                // Por ahora mostrar el fragmento de inicio
+                // Inicio - Rutinas (HomeFragment con FAB para crear rutinas)
                 selectedFragment = HomeFragment.newInstance();
             } else if (itemId == R.id.nav_progress) {
-                // Por ahora mostrar el fragmento de inicio
-                selectedFragment = HomeFragment.newInstance();
+                // Progreso - Historial de entrenamientos
+                selectedFragment = HistorialFragment.newInstance();
             } else if (itemId == R.id.nav_profile) {
-                // Por ahora mostrar el fragmento de inicio
-                selectedFragment = HomeFragment.newInstance();
+                // Perfil - Todos los datos del onboarding
+                selectedFragment = PerfilFragment.newInstance();
             }
 
             if (selectedFragment != null) {

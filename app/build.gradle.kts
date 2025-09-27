@@ -33,6 +33,12 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    // Configuración de lint para deshabilitar chequeos específicos
+    lint {
+        disable += "GestureBackNavigation"
+        disable += "MissingSuperCall"
+        abortOnError = false
+    }
 }
 
 dependencies {

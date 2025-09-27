@@ -11,36 +11,66 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.MyApplication">
+        android:theme="@style/Theme.MyApplication"
+        tools:targetApi="31">
 
+        <!-- MainActivity - Actividad principal -->
         <activity
-            android:name=".OnboardingActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="adjustResize">
+            android:theme="@style/Theme.MyApplication"
+            android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- OnboardingActivity - Configuración inicial -->
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyApplication"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <!-- DataDownloadActivity - Descarga de datos -->
         <activity
             android:name=".DataDownloadActivity"
             android:exported="false"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="false"
+            android:theme="@style/Theme.MyApplication"
             android:configChanges="orientation|screenSize|keyboardHidden" />
 
+        <!-- ExerciseListActivity - Lista de ejercicios -->
         <activity
             android:name=".ExerciseListActivity"
             android:exported="false"
+            android:theme="@style/Theme.MyApplication"
             android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <!-- CrearRutinaActivity - Crear rutinas -->
+        <activity
+            android:name=".CrearRutinaActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.MyApplication"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <!-- EjecutarRutinaActivity - Ejecutar rutinas (SIN restricción de orientación) -->
+        <activity
+            android:name=".EjecutarRutinaActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.MyApplication"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
     </application>
 
 </manifest>

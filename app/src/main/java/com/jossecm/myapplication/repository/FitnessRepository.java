@@ -513,4 +513,61 @@ public class FitnessRepository {
             }
         });
     }
+
+    // Métodos para Rutinas
+    public void getAllRutinas(DataCallback<List<Rutina>> callback) {
+        executor.execute(() -> {
+            try {
+                List<Rutina> rutinas = database.rutinaDao().getAllRutinas();
+                callback.onSuccess(rutinas);
+            } catch (Exception e) {
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    public void insertRutina(Rutina rutina, DataCallback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                long id = database.rutinaDao().insert(rutina);
+                callback.onSuccess(id > 0);
+            } catch (Exception e) {
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    public void getRutinaById(long id, DataCallback<Rutina> callback) {
+        executor.execute(() -> {
+            try {
+                Rutina rutina = database.rutinaDao().getRutinaById(id);
+                callback.onSuccess(rutina);
+            } catch (Exception e) {
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    // Métodos para Historial de Entrenamientos
+    public void insertHistorialEntrenamiento(HistorialEntrenamiento historial, DataCallback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                long id = database.historialEntrenamientoDao().insert(historial);
+                callback.onSuccess(id > 0);
+            } catch (Exception e) {
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    public void getAllHistorial(DataCallback<List<HistorialEntrenamiento>> callback) {
+        executor.execute(() -> {
+            try {
+                List<HistorialEntrenamiento> historial = database.historialEntrenamientoDao().getAllHistorial();
+                callback.onSuccess(historial);
+            } catch (Exception e) {
+                callback.onError(e.getMessage());
+            }
+        });
+    }
 }

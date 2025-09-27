@@ -50,14 +50,13 @@ public class OnboardingActivity extends AppCompatActivity {
     }
 
     private void setupSystemBars() {
-        // Configurar para que el contenido no se solape con las barras del sistema
+        // Configurar para que el contenido RESPETE las barras del sistema
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            getWindow().setDecorFitsSystemWindows(false);
+            getWindow().setDecorFitsSystemWindows(true); // CAMBIAR a true para respetar barras
         } else {
+            // Para versiones anteriores, usar configuración normal
             getWindow().getDecorView().setSystemUiVisibility(
-                getWindow().getDecorView().getSystemUiVisibility()
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             );
         }
     }

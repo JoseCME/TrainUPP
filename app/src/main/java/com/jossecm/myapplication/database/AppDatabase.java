@@ -1,39 +1,47 @@
 package com.jossecm.myapplication.database;
 
+import android.content.Context;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
-import android.content.Context;
-import com.jossecm.myapplication.models.User;
-import com.jossecm.myapplication.models.Exercise;
-import com.jossecm.myapplication.models.Equipment;
-import com.jossecm.myapplication.models.Muscle;
+import com.jossecm.myapplication.models.*;
 
 @Database(
-    entities = {User.class, Exercise.class, Equipment.class, Muscle.class},
-    version = 1,
+    entities = {
+        User.class,
+        Equipment.class,
+        Muscle.class,
+        Exercise.class,
+        Rutina.class,
+        HistorialEntrenamiento.class
+    },
+    version = 2,
     exportSchema = false
 )
-@TypeConverters(Converters.class)
+@TypeConverters({Converters.class})
 public abstract class AppDatabase extends RoomDatabase {
-
-    public abstract UserDao userDao();
-    public abstract ExerciseDao exerciseDao();
-    public abstract EquipmentDao equipmentDao();
-    public abstract MuscleDao muscleDao();
 
     private static volatile AppDatabase INSTANCE;
 
-    public static AppDatabase getDatabase(final Context context) {
+    public abstract UserDao userDao();
+    public abstract EquipmentDao equipmentDao();
+    public abstract MuscleDao muscleDao();
+    public abstract ExerciseDao exerciseDao();
+    public abstract RutinaDao rutinaDao();
+    public abstract HistorialEntrenamientoDao historialEntrenamientoDao();
+
+    public static AppDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(
-                        context.getApplicationContext(),
-                        AppDatabase.class,
-                        "fitness_database"
-                    ).build();
+                            context.getApplicationContext(),
+                            AppDatabase.class,
+                            "fitness_database"
+                    )
+                    .fallbackToDestructiveMigration()
+                    .build();
                 }
             }
         }
