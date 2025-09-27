@@ -437,13 +437,69 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
                 "Abriendo chat con contexto - Rutina: " + rutina.getNombre() +
                 ", Ejercicios: " + exerciseList.size());
 
-            // Iniciar actividad de chat con animación
-            startActivity(intent);
+            // CAMBIADO: Usar startActivityForResult para detectar cuando se agreguen ejercicios
+            startActivityForResult(intent, 1001);
             overridePendingTransition(R.anim.slide_up, R.anim.fade_out);
 
         } catch (Exception e) {
             android.util.Log.e("EjecutarRutinaActivity", "Error creando contexto de rutina para chat", e);
             Toast.makeText(this, "Error preparando información de rutina", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // NUEVO: Método para manejar el resultado del chat de IA
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1001) { // Código del chat de IA
+            if (resultCode == RESULT_OK) {
+                // El chat de IA agregó ejercicios, recargar la rutina actual
+                android.util.Log.d("EjecutarRutinaActivity", "Chat de IA completado, recargando rutina");
+                Toast.makeText(this, "Actualizando rutina con nuevos ejercicios...", Toast.LENGTH_SHORT).show();
+                recargarRutinaActualizada();
+            }
+        }
+    }
+
+    // NUEVO: Método para recargar la rutina con los ejercicios actualizados
+    private void recargarRutinaActualizada() {
+        // Mostrar indicador de carga
+        showLoading();
+
+        // Recargar la rutina desde la base de datos para obtener los ejercicios actualizados
+        repository.getRutinaById(rutinaId, new FitnessRepository.DataCallback<Rutina>() {
+            @Override
+            public void onSuccess(Rutina rutinaActualizada) {
+                runOnUiThread(() -> {
+                    if (rutinaActualizada != null) {
+                        rutina = rutinaActualizada;
+                        android.util.Log.d("EjecutarRutinaActivity",
+                            "Rutina recargada - Total ejercicios: " + rutina.getCantidadEjercicios());
+
+                        // Recargar los ejercicios
+                        loadEjerciciosRutina();
+
+                        // Mostrar mensaje de éxito
+                        Toast.makeText(EjecutarRutinaActivity.this,
+                            "✅ Rutina actualizada con nuevos ejercicios", Toast.LENGTH_SHORT).show();
+                    } else {
+                        showEmpty();
+                        Toast.makeText(EjecutarRutinaActivity.this,
+                            "Error actualizando rutina", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    android.util.Log.e("EjecutarRutinaActivity", "Error recargando rutina: " + error);
+                    Toast.makeText(EjecutarRutinaActivity.this,
+                        "Error actualizando rutina: " + error, Toast.LENGTH_SHORT).show();
+                    showContent(); // Volver a mostrar la rutina anterior
+                });
+            }
+        });
     }
 }

@@ -2,6 +2,7 @@ package com.jossecm.myapplication.models;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class Mensaje {
@@ -11,6 +12,10 @@ public class Mensaje {
     private String nombreUsuario;
     private boolean enviando; // Para mostrar estado "enviando..."
 
+    // NUEVO: Soporte para ejercicios recomendados
+    private List<Exercise> ejerciciosRecomendados;
+    private boolean tieneEjerciciosRecomendados;
+
     // Constructor principal
     public Mensaje(String texto, boolean esUsuario) {
         this.texto = texto;
@@ -18,6 +23,7 @@ public class Mensaje {
         this.timestamp = System.currentTimeMillis();
         this.enviando = false;
         this.nombreUsuario = esUsuario ? "Tú" : "Coach IA";
+        this.tieneEjerciciosRecomendados = false;
     }
 
     // Constructor completo
@@ -27,9 +33,10 @@ public class Mensaje {
         this.timestamp = System.currentTimeMillis();
         this.enviando = false;
         this.nombreUsuario = nombreUsuario;
+        this.tieneEjerciciosRecomendados = false;
     }
 
-    // Getters y setters
+    // Getters y setters existentes
     public String getTexto() {
         return texto;
     }
@@ -68,6 +75,24 @@ public class Mensaje {
 
     public void setEnviando(boolean enviando) {
         this.enviando = enviando;
+    }
+
+    // NUEVOS: Getters y setters para ejercicios recomendados
+    public List<Exercise> getEjerciciosRecomendados() {
+        return ejerciciosRecomendados;
+    }
+
+    public void setEjerciciosRecomendados(List<Exercise> ejerciciosRecomendados) {
+        this.ejerciciosRecomendados = ejerciciosRecomendados;
+        this.tieneEjerciciosRecomendados = ejerciciosRecomendados != null && !ejerciciosRecomendados.isEmpty();
+    }
+
+    public boolean isTieneEjerciciosRecomendados() {
+        return tieneEjerciciosRecomendados;
+    }
+
+    public void setTieneEjerciciosRecomendados(boolean tieneEjerciciosRecomendados) {
+        this.tieneEjerciciosRecomendados = tieneEjerciciosRecomendados;
     }
 
     // Método auxiliar para formatear tiempo

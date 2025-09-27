@@ -21,7 +21,11 @@ import com.jossecm.myapplication.models.User;
 import com.jossecm.myapplication.repository.FitnessRepository;
 import com.jossecm.myapplication.services.AIService;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class ChatIAActivity extends AppCompatActivity {
 
@@ -53,6 +57,7 @@ public class ChatIAActivity extends AppCompatActivity {
     private String contextoRutina;
     private Rutina rutinaActual;
     private List<Exercise> ejerciciosRutina;
+    private List<Exercise> todosLosEjercicios; // Base de datos completa de ejercicios
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,6 +142,30 @@ public class ChatIAActivity extends AppCompatActivity {
 
         // NUEVO: Cargar datos de rutina desde Intent
         cargarDatosRutina();
+
+        // NUEVO: Cargar todos los ejercicios para detección
+        cargarTodosLosEjercicios();
+    }
+
+    // NUEVO: Cargar todos los ejercicios de la base de datos para detección
+    private void cargarTodosLosEjercicios() {
+        repository.getAllExercises(new FitnessRepository.DataCallback<List<Exercise>>() {
+            @Override
+            public void onSuccess(List<Exercise> exercises) {
+                runOnUiThread(() -> {
+                    todosLosEjercicios = exercises;
+                    android.util.Log.d(TAG, "Ejercicios cargados para detección: " + (exercises != null ? exercises.size() : 0));
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    android.util.Log.e(TAG, "Error cargando ejercicios para detección: " + error);
+                    todosLosEjercicios = new ArrayList<>();
+                });
+            }
+        });
     }
 
     // NUEVO: Método para cargar datos de rutina desde Intent
@@ -244,6 +273,9 @@ public class ChatIAActivity extends AppCompatActivity {
 
         recyclerViewMensajes.setLayoutManager(layoutManager);
         recyclerViewMensajes.setAdapter(mensajeAdapter);
+
+        // NUEVO: Configurar listener para implementar ejercicios
+        mensajeAdapter.setOnImplementarEjercicioListener(this::implementarEjercicioEnRutina);
 
         // Scroll automático cuando se agregan mensajes
         mensajeAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -430,6 +462,14 @@ public class ChatIAActivity extends AppCompatActivity {
 
                     // Crear mensaje de respuesta de la IA
                     Mensaje mensajeIA = new Mensaje(respuesta, false);
+
+                    // NUEVO: Detectar ejercicios recomendados en la respuesta
+                    List<Exercise> ejerciciosDetectados = detectarEjerciciosEnRespuesta(respuesta);
+                    if (ejerciciosDetectados != null && !ejerciciosDetectados.isEmpty()) {
+                        mensajeIA.setEjerciciosRecomendados(ejerciciosDetectados);
+                        android.util.Log.d(TAG, "Ejercicios detectados en respuesta: " + ejerciciosDetectados.size());
+                    }
+
                     mensajeAdapter.agregarMensaje(mensajeIA);
 
                     android.util.Log.d(TAG, "Respuesta de IA recibida: " + respuesta.substring(0, Math.min(50, respuesta.length())));
@@ -522,5 +562,363 @@ public class ChatIAActivity extends AppCompatActivity {
     public void onBackPressed() {
         android.util.Log.d(TAG, "Botón atrás presionado, cerrando chat");
         super.onBackPressed();
+    }
+
+    // NUEVO: Método para implementar ejercicio en la rutina (PERSISTIR EN BD)
+    private void implementarEjercicioEnRutina(Exercise ejercicio) {
+        if (ejercicio == null) {
+            return;
+        }
+
+        android.util.Log.d(TAG, "Implementando ejercicio en rutina: " + ejercicio.getName());
+
+        // Verificar si la rutina actual es válida
+        if (rutinaActual == null || ejerciciosRutina == null) {
+            Toast.makeText(this, "Rutina no disponible", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Verificar si el ejercicio ya existe en la rutina
+        for (Exercise existente : ejerciciosRutina) {
+            if (existente.getName().equalsIgnoreCase(ejercicio.getName()) || existente.getId() == ejercicio.getId()) {
+                Toast.makeText(this, "Este ejercicio ya está en tu rutina", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        // Agregar ejercicio a la rutina local (para el contexto de la IA)
+        ejerciciosRutina.add(ejercicio);
+
+        // Actualizar contexto de rutina para que la IA sepa sobre el nuevo ejercicio
+        construirContextoRutina();
+
+        // NUEVO: Guardar ejercicio en la base de datos si es un ejercicio nuevo
+        if (ejercicio.getId() >= 9000) { // Ejercicios generados por IA tienen ID >= 9000
+            guardarEjercicioGenericoEnBD(ejercicio, () -> {
+                // Callback después de guardar en BD
+                agregarEjercicioARutinaEnBD(ejercicio);
+            });
+        } else {
+            // Ejercicio existente, solo agregarlo a la rutina
+            agregarEjercicioARutinaEnBD(ejercicio);
+        }
+
+        // Mostrar mensaje de éxito
+        Toast.makeText(this, "✅ " + ejercicio.getName() + " agregado a tu rutina", Toast.LENGTH_SHORT).show();
+
+        // Enviar mensaje a la IA informando sobre el nuevo ejercicio
+        String mensaje = "✅ Perfecto! He agregado '" + ejercicio.getName() + "' a tu rutina \"" +
+                        rutinaActual.getNombre() + "\". Ahora tienes " + ejerciciosRutina.size() + " ejercicios.";
+        Mensaje mensajeIA = new Mensaje(mensaje, false);
+        mensajeAdapter.agregarMensaje(mensajeIA);
+
+        // Actualizar vista de mensajes
+        recyclerViewMensajes.scrollToPosition(mensajeAdapter.getItemCount() - 1);
+
+        android.util.Log.d(TAG, "Ejercicio agregado a rutina - Local: " + ejerciciosRutina.size() + " ejercicios");
+    }
+
+    // NUEVO: Guardar ejercicio genérico en la base de datos
+    private void guardarEjercicioGenericoEnBD(Exercise ejercicio, Runnable onSuccess) {
+        // Generar un ID único para el nuevo ejercicio
+        long timestamp = System.currentTimeMillis();
+        int nuevoId = (int) (timestamp % 100000); // ID único basado en timestamp
+        ejercicio.setId(nuevoId);
+
+        repository.addExercise(ejercicio, new FitnessRepository.DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                runOnUiThread(() -> {
+                    android.util.Log.d(TAG, "Ejercicio genérico guardado en BD: " + ejercicio.getName());
+                    if (onSuccess != null) {
+                        onSuccess.run();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    android.util.Log.e(TAG, "Error guardando ejercicio genérico: " + error);
+                    // Continuar con ID temporal si falla el guardado
+                    if (onSuccess != null) {
+                        onSuccess.run();
+                    }
+                });
+            }
+        });
+    }
+
+    // NUEVO: Agregar ejercicio a la rutina en la base de datos
+    private void agregarEjercicioARutinaEnBD(Exercise ejercicio) {
+        if (rutinaActual == null) {
+            return;
+        }
+
+        repository.addExerciseToRoutine(rutinaActual.getId(), ejercicio.getId(), new FitnessRepository.DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                runOnUiThread(() -> {
+                    android.util.Log.d(TAG, "Ejercicio agregado a rutina en BD: " + ejercicio.getName());
+
+                    // Indicar que se hicieron cambios para actualizar la actividad padre
+                    setResult(RESULT_OK);
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    android.util.Log.e(TAG, "Error agregando ejercicio a rutina en BD: " + error);
+                    Toast.makeText(ChatIAActivity.this,
+                        "Ejercicio agregado localmente, pero no se pudo sincronizar",
+                        Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+    }
+
+    // NUEVO: Método avanzado para detectar ejercicios en la respuesta de la IA
+    private List<Exercise> detectarEjerciciosEnRespuesta(String respuesta) {
+        List<Exercise> ejerciciosGenerados = new ArrayList<>();
+        String respuestaLower = respuesta.toLowerCase();
+
+        android.util.Log.d(TAG, "Generando ejercicios nuevos desde respuesta de " + respuesta.length() + " caracteres");
+
+        // Detectar si la respuesta menciona ejercicios o recomendaciones
+        String[] patronesRecomendacion = {
+            "te recomiendo", "ejercicios recomendados", "puedes hacer", "deberías hacer",
+            "intenta", "practica", "realiza", "haz", "ejercicio", "entrenamiento"
+        };
+
+        boolean esRecomendacion = false;
+        for (String patron : patronesRecomendacion) {
+            if (respuestaLower.contains(patron)) {
+                esRecomendacion = true;
+                break;
+            }
+        }
+
+        if (!esRecomendacion) {
+            return ejerciciosGenerados;
+        }
+
+        // Generar ejercicios basándose en el contenido de la respuesta
+        ejerciciosGenerados.addAll(generarEjerciciosDeRespuesta(respuesta));
+
+        android.util.Log.d(TAG, "Total de ejercicios generados: " + ejerciciosGenerados.size());
+        return ejerciciosGenerados;
+    }
+
+    // NUEVO: Generar ejercicios completamente nuevos basados en la respuesta de la IA
+    private List<Exercise> generarEjerciciosDeRespuesta(String respuesta) {
+        List<Exercise> ejercicios = new ArrayList<>();
+
+        // Detectar menciones de grupos musculares y tipos de ejercicios
+        Map<String, List<String>> ejerciciosPorMusculo = detectarEjerciciosPorMusculo(respuesta);
+
+        int ejercicioId = 9000 + (int)(System.currentTimeMillis() % 1000); // ID único temporal
+
+        for (Map.Entry<String, List<String>> entry : ejerciciosPorMusculo.entrySet()) {
+            String musculo = entry.getKey();
+            List<String> tiposEjercicio = entry.getValue();
+
+            for (String tipo : tiposEjercicio) {
+                Exercise ejercicioNuevo = crearEjercicioPersonalizado(ejercicioId++, musculo, tipo);
+                ejercicios.add(ejercicioNuevo);
+
+                android.util.Log.d(TAG, "Ejercicio generado: " + ejercicioNuevo.getName() +
+                                 " - Músculos: " + ejercicioNuevo.getMuscleNames());
+
+                // Limitar a máximo 4 ejercicios por respuesta
+                if (ejercicios.size() >= 4) {
+                    break;
+                }
+            }
+
+            if (ejercicios.size() >= 4) {
+                break;
+            }
+        }
+
+        // Si no se detectaron ejercicios específicos, generar ejercicios genéricos
+        if (ejercicios.isEmpty()) {
+            ejercicios.addAll(generarEjerciciosGenericos(ejercicioId));
+        }
+
+        return ejercicios;
+    }
+
+    // NUEVO: Detectar ejercicios específicos por grupo muscular mencionado en la respuesta
+    private Map<String, List<String>> detectarEjerciciosPorMusculo(String respuesta) {
+        Map<String, List<String>> ejerciciosPorMusculo = new HashMap<>();
+        String respuestaLower = respuesta.toLowerCase();
+
+        // Mapear palabras clave a grupos musculares y ejercicios
+        if (respuestaLower.contains("pecho") || respuestaLower.contains("chest") ||
+            respuestaLower.contains("press") || respuestaLower.contains("flexion")) {
+            List<String> ejerciciosPecho = Arrays.asList("Press", "Flexiones", "Fly", "Dips");
+            ejerciciosPorMusculo.put("Chest", ejerciciosPecho);
+        }
+
+        if (respuestaLower.contains("espalda") || respuestaLower.contains("back") ||
+            respuestaLower.contains("remo") || respuestaLower.contains("pull")) {
+            List<String> ejerciciosEspalda = Arrays.asList("Remo", "Pull-ups", "Dominadas", "Jalones");
+            ejerciciosPorMusculo.put("Lats", ejerciciosEspalda);
+        }
+
+        if (respuestaLower.contains("hombro") || respuestaLower.contains("shoulder") ||
+            respuestaLower.contains("deltoid")) {
+            List<String> ejerciciosHombro = Arrays.asList("Press Militar", "Elevaciones", "Remo al Mentón");
+            ejerciciosPorMusculo.put("Shoulders", ejerciciosHombro);
+        }
+
+        if (respuestaLower.contains("biceps") || respuestaLower.contains("curl")) {
+            List<String> ejerciciosBiceps = Arrays.asList("Curl", "Hammer Curl", "Curl Concentrado");
+            ejerciciosPorMusculo.put("Biceps", ejerciciosBiceps);
+        }
+
+        if (respuestaLower.contains("triceps") || respuestaLower.contains("tricep")) {
+            List<String> ejerciciosTriceps = Arrays.asList("Press Francés", "Dips", "Extensiones");
+            ejerciciosPorMusculo.put("Triceps", ejerciciosTriceps);
+        }
+
+        if (respuestaLower.contains("pierna") || respuestaLower.contains("leg") ||
+            respuestaLower.contains("sentadilla") || respuestaLower.contains("squat")) {
+            List<String> ejerciciosPiernas = Arrays.asList("Sentadillas", "Zancadas", "Peso Muerto");
+            ejerciciosPorMusculo.put("Hamstrings", ejerciciosPiernas);
+        }
+
+        if (respuestaLower.contains("core") || respuestaLower.contains("abdomen") ||
+            respuestaLower.contains("plancha") || respuestaLower.contains("abs")) {
+            List<String> ejerciciosCore = Arrays.asList("Plancha", "Crunches", "Mountain Climbers");
+            ejerciciosPorMusculo.put("Core", ejerciciosCore);
+        }
+
+        return ejerciciosPorMusculo;
+    }
+
+    // NUEVO: Crear un ejercicio personalizado específico
+    private Exercise crearEjercicioPersonalizado(int id, String musculo, String tipo) {
+        Exercise ejercicio = new Exercise();
+        ejercicio.setId(id);
+
+        // Generar nombre creativo combinando tipo y músculo
+        String nombre = generarNombreEjercicio(tipo, musculo);
+        ejercicio.setName(nombre);
+
+        // Generar descripción personalizada
+        String descripcion = generarDescripcionEjercicio(tipo, musculo);
+        ejercicio.setDescription(descripcion);
+
+        // Asignar músculos objetivo
+        List<String> musculos = new ArrayList<>();
+        musculos.add(musculo);
+
+        // Agregar músculos secundarios según el tipo de ejercicio
+        musculos.addAll(obtenerMusculosSecundarios(tipo, musculo));
+
+        ejercicio.setMuscleNames(musculos);
+
+        // Sin imagen por ahora
+        ejercicio.setImageUrl(null);
+
+        return ejercicio;
+    }
+
+    // NUEVO: Generar nombre creativo para el ejercicio
+    private String generarNombreEjercicio(String tipo, String musculo) {
+        String[] prefijos = {"Super", "Power", "Intenso", "Avanzado", "Dinámico", "Explosivo"};
+        String[] sufijos = {"Pro", "Max", "Plus", "Elite", "Premium", "Ultimate"};
+
+        Random random = new Random();
+
+        // 60% de probabilidad de agregar prefijo/sufijo
+        if (random.nextFloat() < 0.6f) {
+            if (random.nextBoolean()) {
+                String prefijo = prefijos[random.nextInt(prefijos.length)];
+                return prefijo + " " + tipo + " de " + musculo;
+            } else {
+                String sufijo = sufijos[random.nextInt(sufijos.length)];
+                return tipo + " " + sufijo + " de " + musculo;
+            }
+        }
+
+        return tipo + " de " + musculo;
+    }
+
+    // NUEVO: Generar descripción personalizada para el ejercicio
+    private String generarDescripcionEjercicio(String tipo, String musculo) {
+        String[] intensidades = {"moderada", "alta", "intensa", "progresiva"};
+        String[] beneficios = {"fortalece", "desarrolla", "tonifica", "potencia"};
+        String[] enfoques = {"específicamente", "efectivamente", "directamente", "principalmente"};
+
+        Random random = new Random();
+
+        String intensidad = intensidades[random.nextInt(intensidades.length)];
+        String beneficio = beneficios[random.nextInt(beneficios.length)];
+        String enfoque = enfoques[random.nextInt(enfoques.length)];
+
+        return String.format("Ejercicio de intensidad %s que %s %s el %s. " +
+                           "Recomendado por tu Coach IA para optimizar tu entrenamiento.",
+                           intensidad, beneficio, enfoque, musculo);
+    }
+
+    // NUEVO: Obtener músculos secundarios según el tipo de ejercicio
+    private List<String> obtenerMusculosSecundarios(String tipo, String musculoPrincipal) {
+        List<String> secundarios = new ArrayList<>();
+
+        switch (tipo.toLowerCase()) {
+            case "press":
+            case "flexiones":
+                if (!musculoPrincipal.equals("Triceps")) secundarios.add("Triceps");
+                if (!musculoPrincipal.equals("Shoulders")) secundarios.add("Shoulders");
+                break;
+
+            case "remo":
+            case "pull-ups":
+            case "dominadas":
+                if (!musculoPrincipal.equals("Biceps")) secundarios.add("Biceps");
+                if (!musculoPrincipal.equals("Shoulders")) secundarios.add("Shoulders");
+                break;
+
+            case "sentadillas":
+            case "zancadas":
+                if (!musculoPrincipal.equals("Core")) secundarios.add("Core");
+                break;
+
+            case "plancha":
+                if (!musculoPrincipal.equals("Shoulders")) secundarios.add("Shoulders");
+                break;
+        }
+
+        return secundarios;
+    }
+
+    // NUEVO: Generar ejercicios genéricos cuando no se detectan específicos
+    private List<Exercise> generarEjerciciosGenericos(int startId) {
+        List<Exercise> ejercicios = new ArrayList<>();
+
+        // Ejercicios genéricos balanceados
+        String[][] ejerciciosGenericos = {
+            {"Entrenamiento Funcional Total", "Core", "Ejercicio completo que trabaja múltiples grupos musculares simultáneamente"},
+            {"Cardio Resistance Training", "Hamstrings", "Combinación de resistencia y cardio para quemar grasa y tonificar"},
+            {"Dynamic Strength Circuit", "Chest", "Circuito dinámico para desarrollar fuerza y resistencia muscular"}
+        };
+
+        for (int i = 0; i < ejerciciosGenericos.length; i++) {
+            Exercise ejercicio = new Exercise();
+            ejercicio.setId(startId + i);
+            ejercicio.setName(ejerciciosGenericos[i][0]);
+            ejercicio.setDescription(ejerciciosGenericos[i][2] + " Personalizado por tu Coach IA.");
+
+            List<String> musculos = new ArrayList<>();
+            musculos.add(ejerciciosGenericos[i][1]);
+            ejercicio.setMuscleNames(musculos);
+
+            ejercicios.add(ejercicio);
+        }
+
+        return ejercicios;
     }
 }

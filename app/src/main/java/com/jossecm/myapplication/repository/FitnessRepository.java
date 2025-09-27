@@ -570,4 +570,98 @@ public class FitnessRepository {
             }
         });
     }
+
+    // NUEVO: Método para agregar un ejercicio personalizado a la base de datos
+    public void addExercise(Exercise exercise, DataCallback<Void> callback) {
+        executor.execute(() -> {
+            try {
+                Log.d(TAG, "Agregando ejercicio personalizado: " + exercise.getName());
+                
+                // Verificar que el ejercicio tenga los datos mínimos necesarios
+                if (exercise.getName() == null || exercise.getName().trim().isEmpty()) {
+                    callback.onError("El ejercicio debe tener un nombre");
+                    return;
+                }
+
+                // Insertar el ejercicio en la base de datos
+                database.exerciseDao().insert(exercise);
+
+                Log.d(TAG, "Ejercicio personalizado agregado: " + exercise.getName());
+                callback.onSuccess(null);
+                
+            } catch (Exception e) {
+                Log.e(TAG, "Error agregando ejercicio personalizado", e);
+                callback.onError("Error guardando ejercicio: " + e.getMessage());
+            }
+        });
+    }
+
+    // NUEVO: Método para agregar un ejercicio a una rutina específica
+    public void addExerciseToRoutine(long rutinaId, int ejercicioId, DataCallback<Void> callback) {
+        executor.execute(() -> {
+            try {
+                Log.d(TAG, "Agregando ejercicio " + ejercicioId + " a rutina " + rutinaId);
+                
+                // Verificar que la rutina existe
+                Rutina rutina = database.rutinaDao().getRutinaById(rutinaId);
+                if (rutina == null) {
+                    callback.onError("La rutina especificada no existe");
+                    return;
+                }
+
+                // Verificar que el ejercicio existe
+                Exercise ejercicio = database.exerciseDao().getExerciseById(ejercicioId);
+                if (ejercicio == null) {
+                    callback.onError("El ejercicio especificado no existe");
+                    return;
+                }
+
+                // Obtener los IDs de ejercicios actuales
+                String ejerciciosIdsActuales = rutina.getEjerciciosIds();
+                List<Integer> listaIds = new ArrayList<>();
+
+                // Parsear los IDs existentes si hay alguno
+                if (ejerciciosIdsActuales != null && !ejerciciosIdsActuales.trim().isEmpty()) {
+                    try {
+                        org.json.JSONArray jsonArray = new org.json.JSONArray(ejerciciosIdsActuales);
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            listaIds.add(jsonArray.getInt(i));
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "Error parseando ejercicios existentes, iniciando lista nueva", e);
+                    }
+                }
+
+                // Verificar si el ejercicio ya está en la rutina
+                if (listaIds.contains(ejercicioId)) {
+                    callback.onError("El ejercicio ya está en la rutina");
+                    return;
+                }
+
+                // Agregar el nuevo ejercicio
+                listaIds.add(ejercicioId);
+
+                // Convertir la lista a JSON
+                org.json.JSONArray jsonArray = new org.json.JSONArray();
+                for (Integer id : listaIds) {
+                    jsonArray.put(id);
+                }
+
+                // Actualizar la rutina con el nuevo ejercicio
+                rutina.setEjerciciosIds(jsonArray.toString());
+                rutina.setCantidadEjercicios(listaIds.size());
+
+                // Guardar la rutina actualizada en la base de datos
+                database.rutinaDao().updateRutina(rutina);
+
+                Log.d(TAG, "Ejercicio " + ejercicio.getName() + " agregado exitosamente a rutina " + rutina.getNombre());
+                Log.d(TAG, "Rutina actualizada - Total ejercicios: " + listaIds.size());
+                callback.onSuccess(null);
+                
+            } catch (Exception e) {
+                Log.e(TAG, "Error agregando ejercicio a rutina", e);
+                callback.onError("Error agregando ejercicio a rutina: " + e.getMessage());
+            }
+        });
+    }
 }

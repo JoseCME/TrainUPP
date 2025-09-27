@@ -4,11 +4,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.jossecm.myapplication.R;
+import com.jossecm.myapplication.models.Exercise;
 import com.jossecm.myapplication.models.Mensaje;
 import java.util.List;
 
@@ -18,9 +21,18 @@ public class MensajeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int MESSAGE_IA = 2;
 
     private List<Mensaje> mensajes;
+    private OnImplementarEjercicioListener implementarListener;
+
+    public interface OnImplementarEjercicioListener {
+        void onImplementarEjercicio(Exercise ejercicio);
+    }
 
     public MensajeAdapter(List<Mensaje> mensajes) {
         this.mensajes = mensajes;
+    }
+
+    public void setOnImplementarEjercicioListener(OnImplementarEjercicioListener listener) {
+        this.implementarListener = listener;
     }
 
     @Override
@@ -106,22 +118,44 @@ public class MensajeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
-    // ViewHolder para mensajes de la IA
-    static class IAMessageViewHolder extends RecyclerView.ViewHolder {
+    // ViewHolder para mensajes de la IA (ACTUALIZADO)
+    class IAMessageViewHolder extends RecyclerView.ViewHolder {
         private TextView tvMensajeTexto;
         private TextView tvTiempo;
         private ImageView ivAvatarIA;
+        private LinearLayout layoutEjerciciosRecomendados;
+        private RecyclerView recyclerViewEjerciciosRecomendados;
 
         public IAMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             tvMensajeTexto = itemView.findViewById(R.id.tvMensajeTexto);
             tvTiempo = itemView.findViewById(R.id.tvTiempo);
             ivAvatarIA = itemView.findViewById(R.id.ivAvatarIA);
+            layoutEjerciciosRecomendados = itemView.findViewById(R.id.layoutEjerciciosRecomendados);
+            recyclerViewEjerciciosRecomendados = itemView.findViewById(R.id.recyclerViewEjerciciosRecomendados);
         }
 
         public void bind(Mensaje mensaje) {
             tvMensajeTexto.setText(mensaje.getTexto());
             tvTiempo.setText(mensaje.getTimeFormatted());
+
+            // NUEVO: Manejar ejercicios recomendados
+            if (mensaje.isTieneEjerciciosRecomendados() && mensaje.getEjerciciosRecomendados() != null) {
+                layoutEjerciciosRecomendados.setVisibility(View.VISIBLE);
+
+                // Configurar RecyclerView de ejercicios recomendados
+                EjerciciosRecomendadosAdapter exerciseAdapter = new EjerciciosRecomendadosAdapter(mensaje.getEjerciciosRecomendados());
+                exerciseAdapter.setOnImplementarEjercicioListener(ejercicio -> {
+                    if (implementarListener != null) {
+                        implementarListener.onImplementarEjercicio(ejercicio);
+                    }
+                });
+
+                recyclerViewEjerciciosRecomendados.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
+                recyclerViewEjerciciosRecomendados.setAdapter(exerciseAdapter);
+            } else {
+                layoutEjerciciosRecomendados.setVisibility(View.GONE);
+            }
         }
     }
 }
