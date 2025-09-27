@@ -10,8 +10,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.jossecm.myapplication.ai.RutinaGeneratorAI;
 import com.jossecm.myapplication.models.Exercise;
 import com.jossecm.myapplication.models.Muscle;
+import com.jossecm.myapplication.models.Rutina;
 import com.jossecm.myapplication.models.User;
 import com.jossecm.myapplication.repository.FitnessRepository;
 import java.util.List;
@@ -190,16 +192,81 @@ public class DataDownloadActivity extends AppCompatActivity {
 
     private void finishDownload(int exerciseCount) {
         currentStep = 3;
-        updateProgress(100, "¡Descarga completa!",
-            "Todos los datos guardados localmente. " + exerciseCount + " ejercicios disponibles offline");
+        updateProgress(95, "Descarga completa - Generando rutinas...",
+            "Datos guardados. Creando rutinas personalizadas con IA...");
 
-        // Esperar un momento y luego ir a MainActivity
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Intent intent = new Intent(DataDownloadActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        }, 2000);
+        // NUEVO: Generar rutinas automáticamente con IA después de la descarga
+        generarRutinasConIA();
+    }
+
+    // NUEVO: Método para generar rutinas automáticamente usando IA
+    private void generarRutinasConIA() {
+        if (currentUser == null) {
+            Log.e(TAG, "Usuario no disponible para generación de rutinas");
+            irAMainActivity();
+            return;
+        }
+
+        Log.d(TAG, "Iniciando generación de rutinas con IA para usuario: " + currentUser.getName());
+
+        RutinaGeneratorAI rutinaGenerator = new RutinaGeneratorAI(this);
+
+        rutinaGenerator.generarRutinasAutomaticas(currentUser, new RutinaGeneratorAI.RutinaGeneratorCallback() {
+            @Override
+            public void onRutinasGeneradas(List<Rutina> rutinas) {
+                runOnUiThread(() -> {
+                    Log.d(TAG, "Rutinas generadas con IA: " + rutinas.size());
+
+                    updateProgress(100, "¡Rutinas creadas automáticamente!",
+                        "Se generaron " + rutinas.size() + " rutinas personalizadas con IA");
+
+                    Toast.makeText(DataDownloadActivity.this,
+                        "🤖 IA creó " + rutinas.size() + " rutinas personalizadas para ti",
+                        Toast.LENGTH_LONG).show();
+
+                    // Esperar un momento para mostrar el éxito y luego ir a MainActivity
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        irAMainActivity();
+                    }, 2000);
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    Log.e(TAG, "Error generando rutinas con IA: " + error);
+
+                    updateProgress(100, "Descarga completa",
+                        "Datos descargados correctamente. Error generando rutinas automáticas");
+
+                    Toast.makeText(DataDownloadActivity.this,
+                        "Datos descargados. Error en generación automática de rutinas",
+                        Toast.LENGTH_LONG).show();
+
+                    // Continuar a MainActivity aunque falle la generación
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        irAMainActivity();
+                    }, 2000);
+                });
+            }
+
+            @Override
+            public void onProgress(String status, int progress) {
+                runOnUiThread(() -> {
+                    // Mapear progreso de generación de rutinas (95-100%)
+                    int progressMapeado = 95 + (progress * 5 / 100);
+                    updateProgress(progressMapeado, status, "IA analizando datos y creando rutinas...");
+                });
+            }
+        });
+    }
+
+    // NUEVO: Método auxiliar para ir a MainActivity
+    private void irAMainActivity() {
+        Intent intent = new Intent(DataDownloadActivity.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void updateProgress(int percentage, String status, String detail) {

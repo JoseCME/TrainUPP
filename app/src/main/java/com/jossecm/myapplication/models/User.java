@@ -34,6 +34,10 @@ public class User {
 
     private boolean useAI; // Preferencia de uso de IA
 
+    // NUEVO: Días de entrenamiento disponibles por semana
+    private int daysPerWeek; // Días que el usuario puede entrenar por semana
+    private int workoutDuration; // Duración preferida en minutos (30, 45, 60, etc.)
+
     // Constructor vacío requerido por Room
     public User() {}
 
@@ -41,7 +45,7 @@ public class User {
     @Ignore
     public User(String name, int age, String gender, float weight, float height,
                 String fitnessLevel, String goal, List<Integer> selectedEquipmentIds,
-                List<String> injuries, boolean useAI) {
+                List<String> injuries, boolean useAI, int daysPerWeek, int workoutDuration) {
         this.name = name;
         this.age = age;
         this.gender = gender;
@@ -52,6 +56,8 @@ public class User {
         this.selectedEquipmentIds = selectedEquipmentIds;
         this.injuries = injuries;
         this.useAI = useAI;
+        this.daysPerWeek = daysPerWeek;
+        this.workoutDuration = workoutDuration;
     }
 
     // Getters y setters
@@ -143,6 +149,22 @@ public class User {
         this.useAI = useAI;
     }
 
+    public int getDaysPerWeek() {
+        return daysPerWeek;
+    }
+
+    public void setDaysPerWeek(int daysPerWeek) {
+        this.daysPerWeek = daysPerWeek;
+    }
+
+    public int getWorkoutDuration() {
+        return workoutDuration;
+    }
+
+    public void setWorkoutDuration(int workoutDuration) {
+        this.workoutDuration = workoutDuration;
+    }
+
     // Métodos auxiliares para compatibilidad con fragmentos existentes
     public void setWantsAiRoutines(boolean wantsAi) {
         this.useAI = wantsAi;
@@ -154,10 +176,6 @@ public class User {
 
     public void setFitnessGoal(String goal) {
         this.goal = goal;
-    }
-
-    public void setDaysPerWeek(int days) {
-        // Campo no usado en el modelo simplificado, se ignora
     }
 
     public void setAdditionalInjuries(String additionalInjuries) {
