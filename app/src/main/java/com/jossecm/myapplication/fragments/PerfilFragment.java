@@ -1,17 +1,25 @@
 package com.jossecm.myapplication.fragments;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import com.bumptech.glide.Glide;
 import com.jossecm.myapplication.OnboardingActivity;
 import com.jossecm.myapplication.R;
 import com.jossecm.myapplication.models.User;
@@ -35,9 +43,15 @@ public class PerfilFragment extends Fragment {
     private TextView textViewPreferenciaIA;
     private TextView textViewFechaRegistro;
     private Button buttonEditarPerfil;
+    private ImageView imageViewAvatar;
 
     private FitnessRepository repository;
     private User currentUser;
+
+    private ActivityResultLauncher<Intent> pickImageLauncher;
+    private SharedPreferences profilePrefs;
+    private static final String PREFS_NAME = "profile_prefs";
+    private static final String KEY_PROFILE_IMAGE_URI = "profile_image_uri";
 
     public static PerfilFragment newInstance() {
         return new PerfilFragment();
@@ -51,6 +65,8 @@ public class PerfilFragment extends Fragment {
 
         initViews(view);
         setupButtons();
+        setupAvatarPicker();
+        loadAvatarFromPrefs();
 
         return view;
     }
@@ -59,6 +75,8 @@ public class PerfilFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadUserData();
+        // Reintentar cargar el avatar por si regresamos del picker
+        loadAvatarFromPrefs();
     }
 
     private void initViews(View view) {
@@ -77,8 +95,10 @@ public class PerfilFragment extends Fragment {
         textViewPreferenciaIA = view.findViewById(R.id.textViewPreferenciaIA);
         textViewFechaRegistro = view.findViewById(R.id.textViewFechaRegistro);
         buttonEditarPerfil = view.findViewById(R.id.buttonEditarPerfil);
+        imageViewAvatar = view.findViewById(R.id.imageViewAvatar);
 
         repository = new FitnessRepository(requireContext());
+        profilePrefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
 
     private void setupButtons() {
@@ -88,6 +108,43 @@ public class PerfilFragment extends Fragment {
             intent.putExtra("edit_mode", true);
             startActivity(intent);
         });
+    }
+
+    // Configurar el selector de imágenes desde la galería (SAF) y manejar el resultado
+    private void setupAvatarPicker() {
+        pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getData();
+                    if (uri != null) {
+                        // Intentar persistir permisos para acceso posterior
+                        try {
+                            // Persistir permiso de lectura para acceder al recurso en sesiones futuras
+                            requireContext().getContentResolver().takePersistableUriPermission(
+                                    uri,
+                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            );
+                        } catch (SecurityException ignored) { }
+
+                        // Guardar en preferencias y mostrar
+                        profilePrefs.edit().putString(KEY_PROFILE_IMAGE_URI, uri.toString()).apply();
+                        Glide.with(this).load(uri).into(imageViewAvatar);
+                    }
+                }
+            }
+        );
+
+        if (imageViewAvatar != null) {
+            imageViewAvatar.setOnClickListener(v -> {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("image/*");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                pickImageLauncher.launch(intent);
+            });
+        }
     }
 
     private void loadUserData() {
@@ -170,5 +227,18 @@ public class PerfilFragment extends Fragment {
     private void showContent() {
         layoutLoading.setVisibility(View.GONE);
         layoutContent.setVisibility(View.VISIBLE);
+    }
+
+    private void loadAvatarFromPrefs() {
+        if (imageViewAvatar == null || profilePrefs == null) return;
+        String uriString = profilePrefs.getString(KEY_PROFILE_IMAGE_URI, null);
+        if (uriString != null) {
+            try {
+                Uri uri = Uri.parse(uriString);
+                Glide.with(this).load(uri).into(imageViewAvatar);
+            } catch (Exception ignored) { }
+        } else {
+            // Mantener el placeholder actual (ic_person) definido en el layout
+        }
     }
 }

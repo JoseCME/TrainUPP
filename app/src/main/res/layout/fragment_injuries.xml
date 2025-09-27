@@ -31,42 +31,66 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Lesión de hombro"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:buttonTint="@color/primary"
+            android:textColor="@color/option_text_selector"
+            android:background="@drawable/option_bg_selector"
+            android:padding="12dp" />
 
         <CheckBox
             android:id="@+id/cbKneeInjury"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Lesión de rodilla"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:buttonTint="@color/primary"
+            android:textColor="@color/option_text_selector"
+            android:background="@drawable/option_bg_selector"
+            android:padding="12dp" />
 
         <CheckBox
             android:id="@+id/cbLowerBackInjury"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Lesión de espalda baja"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:buttonTint="@color/primary"
+            android:textColor="@color/option_text_selector"
+            android:background="@drawable/option_bg_selector"
+            android:padding="12dp" />
 
         <CheckBox
             android:id="@+id/cbWristInjury"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Lesión de muñeca"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:buttonTint="@color/primary"
+            android:textColor="@color/option_text_selector"
+            android:background="@drawable/option_bg_selector"
+            android:padding="12dp" />
 
         <CheckBox
             android:id="@+id/cbAnkleInjury"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Lesión de tobillo"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:buttonTint="@color/primary"
+            android:textColor="@color/option_text_selector"
+            android:background="@drawable/option_bg_selector"
+            android:padding="12dp" />
 
         <CheckBox
             android:id="@+id/cbNeckInjury"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Lesión de cuello"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="24dp"
+            android:buttonTint="@color/primary"
+            android:textColor="@color/option_text_selector"
+            android:background="@drawable/option_bg_selector"
+            android:padding="12dp" />
 
         <TextView
             android:layout_width="wrap_content"

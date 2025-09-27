@@ -16,6 +16,12 @@ import java.util.Locale;
 public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.ViewHolder> {
 
     private List<HistorialEntrenamiento> historialList;
+    public interface OnItemClickListener {
+        void onItemClick(HistorialEntrenamiento item);
+    }
+    private OnItemClickListener listener;
+
+    public void setOnItemClickListener(OnItemClickListener l) { this.listener = l; }
 
     public HistorialAdapter(List<HistorialEntrenamiento> historialList) {
         this.historialList = historialList;
@@ -71,6 +77,10 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.View
 
             // Mostrar volumen total
             textViewVolumen.setText(String.format(Locale.getDefault(), "%.1f lbs", historial.getVolumenTotal()));
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(historial);
+            });
         }
     }
 }

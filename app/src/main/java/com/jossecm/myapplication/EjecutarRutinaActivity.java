@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -72,30 +73,21 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
     }
 
     private void setupSystemBars() {
-        // CORREGIDO para tablets: Configurar WindowInsets adecuadamente
+        // CORREGIDO: usar WindowCompat para compatibilidad hacia atrás
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             // Para Android 11+ (API 30+)
-            getWindow().setDecorFitsSystemWindows(false);
+            WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
             findViewById(android.R.id.content).setOnApplyWindowInsetsListener((v, insets) -> {
                 androidx.core.graphics.Insets systemInsets = androidx.core.graphics.Insets.toCompatInsets(
                         insets.getInsets(android.view.WindowInsets.Type.systemBars())
                 );
-
-                // Aplicar padding al contenido principal para evitar solapamiento
                 v.setPadding(systemInsets.left, systemInsets.top, systemInsets.right, systemInsets.bottom);
-
-                android.util.Log.d("EjecutarRutinaActivity",
-                        "WindowInsets aplicados - Left: " + systemInsets.left +
-                                ", Top: " + systemInsets.top +
-                                ", Right: " + systemInsets.right +
-                                ", Bottom: " + systemInsets.bottom);
-
                 return insets;
             });
         } else {
-            // Para versiones anteriores
-            getWindow().setDecorFitsSystemWindows(true);
+            // Para versiones anteriores, hacer que el contenido respete las barras
+            WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         }
     }
 

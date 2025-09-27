@@ -35,19 +35,42 @@
                 android:id="@+id/rbBeginner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Principiante" />
+                android:text="Principiante"
+                android:buttonTint="@color/primary"
+                android:textColor="@color/option_text_selector"
+                android:background="@drawable/option_bg_selector"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_marginBottom="8dp" />
 
             <RadioButton
                 android:id="@+id/rbIntermediate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Intermedio" />
+                android:text="Intermedio"
+                android:buttonTint="@color/primary"
+                android:textColor="@color/option_text_selector"
+                android:background="@drawable/option_bg_selector"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_marginBottom="8dp" />
 
             <RadioButton
                 android:id="@+id/rbAdvanced"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Avanzado" />
+                android:text="Avanzado"
+                android:buttonTint="@color/primary"
+                android:textColor="@color/option_text_selector"
+                android:background="@drawable/option_bg_selector"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
 
         </RadioGroup>
 
@@ -68,25 +91,56 @@
                 android:id="@+id/rbLoseWeight"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Perder peso" />
+                android:text="Perder peso"
+                android:buttonTint="@color/primary"
+                android:textColor="@color/option_text_selector"
+                android:background="@drawable/option_bg_selector"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_marginBottom="8dp" />
 
             <RadioButton
                 android:id="@+id/rbGainMuscle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ganar músculo" />
+                android:text="Ganar músculo"
+                android:buttonTint="@color/primary"
+                android:textColor="@color/option_text_selector"
+                android:background="@drawable/option_bg_selector"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_marginBottom="8dp" />
 
             <RadioButton
                 android:id="@+id/rbMaintenance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Mantenimiento" />
+                android:text="Mantenimiento"
+                android:buttonTint="@color/primary"
+                android:textColor="@color/option_text_selector"
+                android:background="@drawable/option_bg_selector"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_marginBottom="8dp" />
 
             <RadioButton
                 android:id="@+id/rbStrength"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Fuerza" />
+                android:text="Fuerza"
+                android:buttonTint="@color/primary"
+                android:textColor="@color/option_text_selector"
+                android:background="@drawable/option_bg_selector"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp" />
 
         </RadioGroup>
 

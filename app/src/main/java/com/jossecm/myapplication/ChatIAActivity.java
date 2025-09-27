@@ -432,7 +432,7 @@ public class ChatIAActivity extends AppCompatActivity {
 
         if (TextUtils.isEmpty(contextoCompleto)) {
             android.util.Log.w(TAG, "Contexto completo no disponible, usando básico");
-            contextoCompleto = "Eres un coach personal de fitness experto. " +
+            contextoCompleto = "Eres un coach personal de fitness experto llamado FredIA. " +
                 "Responde preguntas sobre ejercicios, técnicas y entrenamiento.";
         }
 

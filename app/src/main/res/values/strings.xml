@@ -1,3 +1,30 @@
 <resources>
     <string name="app_name">My Application</string>
+
+    <!-- Onboarding (custom) -->
+    <string name="cd_trainup_logo">Logo de TRAINUP</string>
+    <string name="welcome_title">Bienvenido a TRAINUP</string>
+    <string name="welcome_description">Organiza y ejecuta tus rutinas de entrenamiento, registra tu progreso y mejora día a día con tu coach inteligente.</string>
+    <string name="action_continue">Continuar</string>
+
+    <string name="features_title">Lo que puedes hacer con TRAINUP</string>
+    <string name="features_intro">Descubre las funciones clave para llevar tus entrenamientos al siguiente nivel:</string>
+
+    <string name="feature_routines_title">Rutinas inteligentes</string>
+    <string name="feature_routines_desc">Crea y sigue rutinas personalizadas para tus objetivos y nivel.</string>
+
+    <string name="feature_progress_title">Historial y progreso</string>
+    <string name="feature_progress_desc">Registra series, repeticiones y peso para ver tu evolución.</string>
+
+    <string name="feature_personalization_title">Datos y preferencias</string>
+    <string name="feature_personalization_desc">Ajusta tu perfil, equipo y lesiones para recomendaciones precisas.</string>
+
+    <string name="feature_ai_title">Coach con IA</string>
+    <string name="feature_ai_desc">Recibe sugerencias y resuelve dudas en tiempo real durante tu entrenamiento.</string>
+
+    <string name="feature_creation_title">Crea y gestiona</string>
+    <string name="feature_creation_desc">Agrega ejercicios y arma tus sesiones de forma rápida.</string>
+
+    <string name="cd_feature_icon">Icono de característica</string>
+    <string name="cd_change_photo">Cambiar foto</string>
 </resources>

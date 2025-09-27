@@ -1,5 +1,6 @@
 package com.jossecm.myapplication.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.jossecm.myapplication.HistorialDetalleActivity;
 import com.jossecm.myapplication.R;
 import com.jossecm.myapplication.adapters.HistorialAdapter;
 import com.jossecm.myapplication.models.HistorialEntrenamiento;
@@ -60,6 +62,17 @@ public class HistorialFragment extends Fragment {
         historialAdapter = new HistorialAdapter(historialList);
         recyclerViewHistorial.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerViewHistorial.setAdapter(historialAdapter);
+
+        historialAdapter.setOnItemClickListener(item -> {
+            if (getActivity() == null) return;
+            Intent intent = new Intent(getActivity(), HistorialDetalleActivity.class);
+            intent.putExtra("nombre_rutina", item.getNombreRutina());
+            intent.putExtra("fecha", item.getFecha());
+            intent.putExtra("duracion_min", item.getDuracionMinutos());
+            intent.putExtra("volumen_total", item.getVolumenTotal());
+            intent.putExtra("ejercicios_json", item.getEjerciciosRealizados());
+            startActivity(intent);
+        });
     }
 
     private void loadHistorial() {
