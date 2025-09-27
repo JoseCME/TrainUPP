@@ -14,7 +14,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.jossecm.myapplication.adapters.MensajeAdapter;
+import com.jossecm.myapplication.models.Exercise;
 import com.jossecm.myapplication.models.Mensaje;
+import com.jossecm.myapplication.models.Rutina;
 import com.jossecm.myapplication.models.User;
 import com.jossecm.myapplication.repository.FitnessRepository;
 import com.jossecm.myapplication.services.AIService;
@@ -46,6 +48,11 @@ public class ChatIAActivity extends AppCompatActivity {
     private AIService aiService;
     private String contextoPersonalizado;
     private SharedPreferences sharedPreferences;
+
+    // NUEVO: Datos de la rutina actual
+    private String contextoRutina;
+    private Rutina rutinaActual;
+    private List<Exercise> ejerciciosRutina;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +134,107 @@ public class ChatIAActivity extends AppCompatActivity {
 
         // Cargar contexto personalizado guardado si existe
         contextoPersonalizado = sharedPreferences.getString(KEY_CONTEXTO_PERSONALIZADO, "");
+
+        // NUEVO: Cargar datos de rutina desde Intent
+        cargarDatosRutina();
+    }
+
+    // NUEVO: Método para cargar datos de rutina desde Intent
+    private void cargarDatosRutina() {
+        long rutinaId = getIntent().getLongExtra("rutina_id", -1);
+        String rutinaNombre = getIntent().getStringExtra("rutina_nombre");
+        String ejerciciosJson = getIntent().getStringExtra("ejercicios_json");
+
+        android.util.Log.d(TAG, "Cargando contexto de rutina - ID: " + rutinaId + ", Nombre: " + rutinaNombre);
+
+        if (rutinaId != -1 && rutinaNombre != null && ejerciciosJson != null) {
+            // Crear rutina temporal con datos recibidos
+            rutinaActual = new Rutina();
+            rutinaActual.setId(rutinaId);
+            rutinaActual.setNombre(rutinaNombre);
+
+            // Parsear ejercicios desde JSON
+            try {
+                ejerciciosRutina = parseEjerciciosFromJson(ejerciciosJson);
+                construirContextoRutina();
+            } catch (Exception e) {
+                android.util.Log.e(TAG, "Error parseando ejercicios JSON", e);
+                contextoRutina = "";
+            }
+        } else {
+            android.util.Log.w(TAG, "No se recibieron datos de rutina completos");
+            contextoRutina = "";
+        }
+    }
+
+    // NUEVO: Parsear ejercicios desde JSON
+    private List<Exercise> parseEjerciciosFromJson(String ejerciciosJson) throws Exception {
+        List<Exercise> ejercicios = new ArrayList<>();
+        org.json.JSONArray jsonArray = new org.json.JSONArray(ejerciciosJson);
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            org.json.JSONObject ejercicioObj = jsonArray.getJSONObject(i);
+            Exercise ejercicio = new Exercise();
+
+            ejercicio.setId(ejercicioObj.getInt("id"));
+            ejercicio.setName(ejercicioObj.getString("name"));
+
+            if (ejercicioObj.has("description")) {
+                ejercicio.setDescription(ejercicioObj.getString("description"));
+            }
+
+            if (ejercicioObj.has("muscleNames")) {
+                org.json.JSONArray musclesArray = ejercicioObj.getJSONArray("muscleNames");
+                List<String> muscleNames = new ArrayList<>();
+                for (int j = 0; j < musclesArray.length(); j++) {
+                    muscleNames.add(musclesArray.getString(j));
+                }
+                ejercicio.setMuscleNames(muscleNames);
+            }
+
+            ejercicios.add(ejercicio);
+        }
+
+        return ejercicios;
+    }
+
+    // NUEVO: Construir contexto específico de la rutina
+    private void construirContextoRutina() {
+        if (rutinaActual == null || ejerciciosRutina == null || ejerciciosRutina.isEmpty()) {
+            contextoRutina = "";
+            return;
+        }
+
+        StringBuilder contexto = new StringBuilder();
+        contexto.append("\n=== RUTINA ACTUAL ===\n");
+        contexto.append("Rutina: ").append(rutinaActual.getNombre()).append("\n");
+        contexto.append("Ejercicios en esta rutina:\n");
+
+        for (int i = 0; i < ejerciciosRutina.size(); i++) {
+            Exercise ejercicio = ejerciciosRutina.get(i);
+            contexto.append(i + 1).append(". ").append(ejercicio.getName());
+
+            if (ejercicio.getMuscleNames() != null && !ejercicio.getMuscleNames().isEmpty()) {
+                contexto.append(" (Músculos: ").append(String.join(", ", ejercicio.getMuscleNames())).append(")");
+            }
+
+            if (ejercicio.getDescription() != null && !ejercicio.getDescription().isEmpty()) {
+                contexto.append(" - ").append(ejercicio.getDescription());
+            }
+
+            contexto.append("\n");
+        }
+
+        contexto.append("\nINSTRUCCIONES ESPECÍFICAS DE RUTINA:\n");
+        contexto.append("1. Cuando el usuario pregunte sobre 'mis ejercicios' o 'esta rutina', refiere específicamente a los ejercicios listados arriba\n");
+        contexto.append("2. Analiza la combinación de músculos y ejercicios para dar feedback sobre balance y efectividad\n");
+        contexto.append("3. Sugiere mejoras específicas basadas en los ejercicios actuales\n");
+        contexto.append("4. Si pregunta sobre progresión, considera los ejercicios específicos que está haciendo\n");
+        contexto.append("5. Evalúa si la rutina es apropiada para su nivel y objetivos\n\n");
+
+        contextoRutina = contexto.toString();
+
+        android.util.Log.d(TAG, "Contexto de rutina construido con " + ejerciciosRutina.size() + " ejercicios");
     }
 
     private void setupRecyclerView() {
@@ -287,13 +395,16 @@ public class ChatIAActivity extends AppCompatActivity {
     }
 
     private void enviarMensajeAIA(String mensaje, int posicionMensajeUsuario) {
-        if (TextUtils.isEmpty(contextoPersonalizado)) {
-            android.util.Log.w(TAG, "Contexto personalizado no cargado, usando básico");
-            contextoPersonalizado = "Eres un coach personal de fitness experto. " +
+        // Construir contexto completo: usuario + rutina
+        String contextoCompleto = construirContextoCompleto();
+
+        if (TextUtils.isEmpty(contextoCompleto)) {
+            android.util.Log.w(TAG, "Contexto completo no disponible, usando básico");
+            contextoCompleto = "Eres un coach personal de fitness experto. " +
                 "Responde preguntas sobre ejercicios, técnicas y entrenamiento.";
         }
 
-        aiService.enviarMensaje(mensaje, contextoPersonalizado, new AIService.AICallback() {
+        aiService.enviarMensaje(mensaje, contextoCompleto, new AIService.AICallback() {
             @Override
             public void onStartTyping() {
                 runOnUiThread(() -> {
@@ -354,6 +465,24 @@ public class ChatIAActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    // NUEVO: Construir contexto completo combinando usuario y rutina
+    private String construirContextoCompleto() {
+        StringBuilder contextoCompleto = new StringBuilder();
+
+        // Agregar contexto del usuario
+        if (!TextUtils.isEmpty(contextoPersonalizado)) {
+            contextoCompleto.append(contextoPersonalizado);
+        }
+
+        // Agregar contexto de la rutina actual
+        if (!TextUtils.isEmpty(contextoRutina)) {
+            contextoCompleto.append(contextoRutina);
+        }
+
+        android.util.Log.d(TAG, "Contexto completo construido - Longitud: " + contextoCompleto.length());
+        return contextoCompleto.toString();
     }
 
     @Override

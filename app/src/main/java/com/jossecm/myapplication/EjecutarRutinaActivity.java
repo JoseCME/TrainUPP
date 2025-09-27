@@ -175,10 +175,8 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
 
         // NUEVO: Configurar FloatingActionButton del chat de IA
         fabChatIA.setOnClickListener(v -> {
-            // Abrir ChatIAActivity real
-            Intent intent = new Intent(EjecutarRutinaActivity.this, ChatIAActivity.class);
-            startActivity(intent);
-            overridePendingTransition(R.anim.slide_up, R.anim.fade_out);
+            // Abrir ChatIAActivity con contexto de rutina actual
+            abrirChatConContextoRutina();
         });
     }
 
@@ -393,5 +391,59 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         mostrarDialogoSalir();
         return true;
+    }
+
+    // NUEVO: Abrir chat con contexto completo de rutina actual
+    private void abrirChatConContextoRutina() {
+        if (rutina == null || exerciseList.isEmpty()) {
+            android.util.Log.w("EjecutarRutinaActivity", "Rutina o ejercicios no disponibles para chat");
+            Toast.makeText(this, "Cargando rutina, intenta de nuevo en un momento", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // Crear JSON con información completa de ejercicios
+            JSONArray ejerciciosArray = new JSONArray();
+
+            for (Exercise exercise : exerciseList) {
+                JSONObject ejercicioObj = new JSONObject();
+                ejercicioObj.put("id", exercise.getId());
+                ejercicioObj.put("name", exercise.getName());
+
+                if (exercise.getDescription() != null) {
+                    ejercicioObj.put("description", exercise.getDescription());
+                }
+
+                if (exercise.getMuscleNames() != null && !exercise.getMuscleNames().isEmpty()) {
+                    JSONArray musclesArray = new JSONArray();
+                    for (String muscle : exercise.getMuscleNames()) {
+                        musclesArray.put(muscle);
+                    }
+                    ejercicioObj.put("muscleNames", musclesArray);
+                }
+
+                ejerciciosArray.put(ejercicioObj);
+            }
+
+            // Crear intent para abrir ChatIAActivity
+            Intent intent = new Intent(this, ChatIAActivity.class);
+
+            // Pasar datos completos de la rutina actual
+            intent.putExtra("rutina_id", rutina.getId());
+            intent.putExtra("rutina_nombre", rutina.getNombre());
+            intent.putExtra("ejercicios_json", ejerciciosArray.toString());
+
+            android.util.Log.d("EjecutarRutinaActivity",
+                "Abriendo chat con contexto - Rutina: " + rutina.getNombre() +
+                ", Ejercicios: " + exerciseList.size());
+
+            // Iniciar actividad de chat con animación
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_up, R.anim.fade_out);
+
+        } catch (Exception e) {
+            android.util.Log.e("EjecutarRutinaActivity", "Error creando contexto de rutina para chat", e);
+            Toast.makeText(this, "Error preparando información de rutina", Toast.LENGTH_SHORT).show();
+        }
     }
 }
