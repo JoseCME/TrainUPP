@@ -19,12 +19,14 @@ import com.jossecm.myapplication.adapters.EjercicioRutinaAdapter;
 import com.jossecm.myapplication.models.Exercise;
 import com.jossecm.myapplication.models.HistorialEntrenamiento;
 import com.jossecm.myapplication.models.Rutina;
+import com.jossecm.myapplication.models.Serie;
 import com.jossecm.myapplication.repository.FitnessRepository;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class EjecutarRutinaActivity extends AppCompatActivity {
 
@@ -156,7 +158,8 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        ejercicioAdapter = new EjercicioRutinaAdapter(exerciseList);
+        // CORREGIDO: Pasar el repository al constructor del adapter
+        ejercicioAdapter = new EjercicioRutinaAdapter(exerciseList, repository);
         ejercicioAdapter.setOnVolumenChangedListener(new EjercicioRutinaAdapter.OnVolumenChangedListener() {
             @Override
             public void onVolumenChanged(double nuevoVolumenTotal) {
@@ -233,7 +236,20 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
                         }
 
                         if (!exerciseList.isEmpty()) {
-                            ejercicioAdapter.notifyDataSetChanged();
+                            android.util.Log.d("EjecutarRutinaActivity",
+                                "Ejercicios filtrados para la rutina: " + exerciseList.size());
+
+                            // DEBUG: Imprimir detalles de los ejercicios
+                            for (int i = 0; i < exerciseList.size(); i++) {
+                                Exercise ex = exerciseList.get(i);
+                                android.util.Log.d("EjecutarRutinaActivity",
+                                    "Ejercicio " + i + ": ID=" + ex.getId() + ", Nombre=" + ex.getName());
+                            }
+
+                            // CORREGIDO: Usar updateExercises en lugar de notifyDataSetChanged
+                            if (ejercicioAdapter != null) {
+                                ejercicioAdapter.updateExercises(new ArrayList<>(exerciseList));
+                            }
                             showContent();
 
                             android.util.Log.d("EjecutarRutinaActivity",
@@ -310,7 +326,57 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
 
     private void finalizarEntrenamiento() {
         try {
-            // Obtener datos del entrenamiento
+            // NUEVO: Primero guardar las series históricas de cada ejercicio
+            Map<Integer, List<Serie>> seriesCompletadas = ejercicioAdapter.getSeriesCompletadas();
+
+            if (seriesCompletadas.isEmpty()) {
+                Toast.makeText(this, "No has completado ninguna serie", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Guardar series históricas de cada ejercicio completado
+            final int[] ejerciciosGuardados = {0};
+            final int totalEjercicios = seriesCompletadas.size();
+
+            for (Map.Entry<Integer, List<Serie>> entry : seriesCompletadas.entrySet()) {
+                int exerciseId = entry.getKey();
+                List<Serie> series = entry.getValue();
+
+                repository.guardarSeriesEjercicio(exerciseId, series, new FitnessRepository.DataCallback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean success) {
+                        ejerciciosGuardados[0]++;
+                        android.util.Log.d("EjecutarRutinaActivity",
+                            "Series guardadas para ejercicio " + exerciseId + ": " + series.size() + " series");
+
+                        // Cuando se hayan guardado todos los ejercicios, guardar el historial general
+                        if (ejerciciosGuardados[0] == totalEjercicios) {
+                            guardarHistorialGeneral();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        android.util.Log.e("EjecutarRutinaActivity",
+                            "Error guardando series para ejercicio " + exerciseId + ": " + error);
+                        // Continuar con el siguiente ejercicio aunque falle uno
+                        ejerciciosGuardados[0]++;
+                        if (ejerciciosGuardados[0] == totalEjercicios) {
+                            guardarHistorialGeneral();
+                        }
+                    }
+                });
+            }
+
+        } catch (Exception e) {
+            android.util.Log.e("EjecutarRutinaActivity", "Error finalizando entrenamiento", e);
+            Toast.makeText(this, "Error procesando datos del entrenamiento", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void guardarHistorialGeneral() {
+        try {
+            // Obtener datos del entrenamiento para el historial general
             JSONObject ejerciciosRealizados = ejercicioAdapter.getEjerciciosRealizadosJson();
             int duracionMinutos = tiempoTranscurridoSegundos / 60;
 
@@ -328,7 +394,9 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         if (success) {
                             Toast.makeText(EjecutarRutinaActivity.this,
-                                    "Rutina completada", Toast.LENGTH_SHORT).show();
+                                    "✅ Rutina completada y guardada", Toast.LENGTH_SHORT).show();
+                            android.util.Log.d("EjecutarRutinaActivity",
+                                "Entrenamiento finalizado y guardado correctamente");
                             finish();
                         } else {
                             Toast.makeText(EjecutarRutinaActivity.this,
@@ -349,7 +417,7 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
             });
 
         } catch (Exception e) {
-            android.util.Log.e("EjecutarRutinaActivity", "Error finalizando entrenamiento", e);
+            android.util.Log.e("EjecutarRutinaActivity", "Error guardando historial general", e);
             Toast.makeText(this, "Error procesando datos del entrenamiento", Toast.LENGTH_SHORT).show();
         }
     }

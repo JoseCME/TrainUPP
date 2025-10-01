@@ -81,6 +81,17 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:text="Anterior"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"
+                android:gravity="center"
+                android:layout_marginStart="8dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Peso (lbs)"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -117,6 +128,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
+
+        <!-- NUEVO: Recuadro para eliminar serie -->
+        <include
+            android:id="@+id/layoutEliminarSerie"
+            layout="@layout/eliminar_serie_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
 
         <!-- Botón para agregar serie -->
         <Button

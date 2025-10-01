@@ -14,9 +14,11 @@ import com.jossecm.myapplication.models.*;
         Muscle.class,
         Exercise.class,
         Rutina.class,
-        HistorialEntrenamiento.class
+        HistorialEntrenamiento.class,
+        SerieHistorial.class,
+        ConfiguracionSeries.class
     },
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters({Converters.class})
@@ -30,6 +32,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ExerciseDao exerciseDao();
     public abstract RutinaDao rutinaDao();
     public abstract HistorialEntrenamientoDao historialEntrenamientoDao();
+    public abstract SerieHistorialDao serieHistorialDao();
+    public abstract ConfiguracionSeriesDao configuracionSeriesDao();
 
     public static AppDatabase getDatabase(Context context) {
         if (INSTANCE == null) {

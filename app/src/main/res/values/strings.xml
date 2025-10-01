@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">My Application</string>
+
+    <!-- Strings para EjercicioRutinaAdapter -->
+    <string name="musculos_no_especificados">Músculos no especificados</string>
+    <string name="peso_placeholder">-- lbs</string>
+    <string name="reps_placeholder">-- reps</string>
+    <string name="no_puedes_eliminar_series">No puedes eliminar series. Mínimo 3 series requeridas.</string>
+    <string name="ingresa_peso_repeticiones_validos">Ingresa peso y repeticiones válidos</string>
+    <string name="deseas_eliminar_serie">¿Deseas eliminar la Serie %1$d?</string>
+    <string name="no_se_puede_eliminar_minimo_series">No se puede eliminar. Mínimo 3 series requeridas.</string>
+    <string name="serie_eliminada_reorganizadas">Serie eliminada ✓ Series reorganizadas</string>
 </resources>

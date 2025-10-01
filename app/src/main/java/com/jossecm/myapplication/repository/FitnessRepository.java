@@ -829,4 +829,106 @@ public class FitnessRepository {
             }
         });
     }
+
+    // NUEVOS: Métodos para Series Históricas
+    public void guardarSeriesEjercicio(int exerciseId, List<Serie> series, DataCallback<Boolean> callback) {
+        executor.execute(() -> {
+            try {
+                long fechaActual = System.currentTimeMillis();
+                List<SerieHistorial> seriesHistorial = new ArrayList<>();
+
+                for (int i = 0; i < series.size(); i++) {
+                    Serie serie = series.get(i);
+                    // Solo guardar series completadas
+                    if (serie.isCompletada()) {
+                        // CORREGIDO: Usar el numeroSerie de la serie en lugar del índice de la lista
+                        int numeroSerieReal = serie.getNumeroSerie();
+                        if (numeroSerieReal <= 0) {
+                            // Fallback: si no tiene numeroSerie asignado, usar el índice
+                            numeroSerieReal = i + 1;
+                        }
+
+                        SerieHistorial serieHistorial = new SerieHistorial(
+                            exerciseId,
+                            numeroSerieReal, // CRÍTICO: usar el número real de la serie
+                            serie.getPeso(),
+                            serie.getRepeticiones(),
+                            true,
+                            fechaActual
+                        );
+                        seriesHistorial.add(serieHistorial);
+
+                        Log.d(TAG, "Guardando serie " + numeroSerieReal + " para ejercicio " + exerciseId +
+                              ": " + serie.getPeso() + " lbs, " + serie.getRepeticiones() + " reps");
+                    }
+                }
+
+                if (!seriesHistorial.isEmpty()) {
+                    database.serieHistorialDao().insertSeries(seriesHistorial);
+                    Log.d(TAG, "Guardadas " + seriesHistorial.size() + " series para ejercicio " + exerciseId);
+                }
+
+                callback.onSuccess(true);
+            } catch (Exception e) {
+                Log.e(TAG, "Error guardando series históricas", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    public void getUltimasSeriesEjercicio(int exerciseId, DataCallback<List<SerieHistorial>> callback) {
+        executor.execute(() -> {
+            try {
+                List<SerieHistorial> series = database.serieHistorialDao().getUltimasSeriesEjercicio(exerciseId);
+                Log.d(TAG, "Cargadas " + series.size() + " series históricas para ejercicio " + exerciseId);
+                callback.onSuccess(series);
+            } catch (Exception e) {
+                Log.e(TAG, "Error cargando series históricas", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    public void getHistorialCompletoEjercicio(int exerciseId, DataCallback<List<SerieHistorial>> callback) {
+        executor.execute(() -> {
+            try {
+                List<SerieHistorial> historial = database.serieHistorialDao().getHistorialCompleto(exerciseId);
+                callback.onSuccess(historial);
+            } catch (Exception e) {
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    // NUEVOS: Métodos para configuración de series por ejercicio
+    public void guardarConfiguracionSeries(int exerciseId, int numSeries) {
+        executor.execute(() -> {
+            try {
+                ConfiguracionSeries config = new ConfiguracionSeries(exerciseId, numSeries);
+                database.configuracionSeriesDao().insertOrUpdate(config);
+
+                Log.d(TAG, "Configuración guardada en BD - Ejercicio " + exerciseId + ": " + numSeries + " series");
+            } catch (Exception e) {
+                Log.e(TAG, "Error guardando configuración de series en BD", e);
+            }
+        });
+    }
+
+    public void getConfiguracionSeries(int exerciseId, DataCallback<Integer> callback) {
+        executor.execute(() -> {
+            try {
+                Integer numSeries = database.configuracionSeriesDao().getNumSeries(exerciseId);
+
+                if (numSeries == null || numSeries < 3) {
+                    numSeries = 3; // Valor por defecto mínimo
+                }
+
+                Log.d(TAG, "Configuración cargada desde BD - Ejercicio " + exerciseId + ": " + numSeries + " series");
+                callback.onSuccess(numSeries);
+            } catch (Exception e) {
+                Log.e(TAG, "Error cargando configuración de series desde BD", e);
+                callback.onSuccess(3); // Valor por defecto en caso de error
+            }
+        });
+    }
 }
