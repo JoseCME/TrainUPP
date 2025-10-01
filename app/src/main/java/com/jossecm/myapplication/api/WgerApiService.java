@@ -8,6 +8,7 @@ import com.jossecm.myapplication.api.models.ApiResponse;
 import com.jossecm.myapplication.api.models.EquipmentResponse;
 import com.jossecm.myapplication.api.models.ExerciseResponse;
 import com.jossecm.myapplication.api.models.ExerciseImageResponse;
+import com.jossecm.myapplication.api.models.ExerciseTranslationResponse;
 import com.jossecm.myapplication.api.models.MuscleResponse;
 
 public interface WgerApiService {
@@ -33,6 +34,12 @@ public interface WgerApiService {
     Call<ApiResponse<ExerciseResponse>> getExercisesWithLanguage(
         @Query("language") int language,
         @Query("status") int status,
+        @Query("limit") int limit
+    );
+
+    @GET("exercise-translation/")
+    Call<ApiResponse<ExerciseTranslationResponse>> getExerciseTranslations(
+        @Query("language") int language,
         @Query("limit") int limit
     );
 

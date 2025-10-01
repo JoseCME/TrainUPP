@@ -142,72 +142,23 @@ public class FitnessRepository {
 
     // Método para cargar ejercicios filtrados por equipamiento
     public void loadExercisesFromApi(List<Integer> equipmentIds, DataCallback<List<Exercise>> callback) {
-        Log.d(TAG, "Cargando ejercicios para equipamientos: " + equipmentIds.toString());
+        Log.d(TAG, "Iniciando descarga con nueva arquitectura");
+        Log.d(TAG, "Equipamientos seleccionados: " + (equipmentIds != null ? equipmentIds.toString() : "null"));
 
-        // Si no hay equipamientos seleccionados, cargar todos los ejercicios
-        if (equipmentIds == null || equipmentIds.isEmpty()) {
-            loadAllExercisesFromApi(callback);
-            return;
-        }
-
-        // Cargar ejercicios en inglés (language=2) sin filtro de equipamiento
-        // La API no soporta múltiples equipamientos, filtraremos localmente
-        apiService.getExercisesWithLanguage(2, 2, 500).enqueue(new Callback<ApiResponse<ExerciseResponse>>() {
+        // PASO 1: Descargar TODOS los ejercicios sin filtrar desde exerciseinfo
+        // (contiene metadatos: músculos, equipamiento, categorías)
+        apiService.getExercisesWithLanguage(2, 2, 1000).enqueue(new Callback<ApiResponse<ExerciseResponse>>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<ExerciseResponse>> call,
                                  @NonNull Response<ApiResponse<ExerciseResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<ExerciseResponse> allExercises = response.body().getResults();
-                    Log.d(TAG, "Total ejercicios recibidos (inglés): " + allExercises.size());
+                    Log.d(TAG, "PASO 1 - Ejercicios descargados desde exerciseinfo: " + allExercises.size());
 
-                    // Debug: ver algunos ejercicios para entender la estructura
-                    for (int i = 0; i < Math.min(5, allExercises.size()); i++) {
-                        ExerciseResponse exercise = allExercises.get(i);
-                        Log.d(TAG, "Ejercicio " + i + ": ID=" + exercise.getId() +
-                              ", Name='" + exercise.getName() + "'" +
-                              ", Description='" + exercise.getDescription() + "'" +
-                              ", Language=" + exercise.getLanguage() +
-                              ", Status=" + exercise.getStatus());
-                    }
-
-                    // Filtrar ejercicios que tengan nombres válidos PRIMERO
-                    List<ExerciseResponse> exercisesWithNames = new ArrayList<>();
-                    for (ExerciseResponse exercise : allExercises) {
-                        // Relajar el filtro - solo verificar que no sea completamente nulo
-                        if (exercise.getName() != null) {
-                            String name = exercise.getName().trim();
-                            if (!name.isEmpty() && !name.equals("null") && !name.equals("")) {
-                                exercisesWithNames.add(exercise);
-                            }
-                        }
-                    }
-
-                    Log.d(TAG, "Ejercicios con nombres válidos: " + exercisesWithNames.size());
-
-                    // Si aún no hay ejercicios con nombres válidos, intentar con todos
-                    if (exercisesWithNames.isEmpty()) {
-                        Log.w(TAG, "No se encontraron ejercicios con nombres válidos, usando todos los ejercicios");
-                        exercisesWithNames = allExercises;
-                    }
-
-                    // DESPUÉS filtrar por equipamiento
-                    List<ExerciseResponse> filteredExercises = new ArrayList<>();
-                    for (ExerciseResponse exercise : exercisesWithNames) {
-                        if (exercise.getEquipment() != null && !exercise.getEquipment().isEmpty()) {
-                            // Verificar si el ejercicio usa alguno de los equipamientos seleccionados
-                            for (Integer equipmentId : equipmentIds) {
-                                if (exercise.getEquipment().contains(equipmentId)) {
-                                    filteredExercises.add(exercise);
-                                    break; // No agregar duplicados
-                                }
-                            }
-                        }
-                    }
-
-                    Log.d(TAG, "Ejercicios filtrados por equipamiento (con nombres): " + filteredExercises.size());
-                    processExercisesWithImages(filteredExercises, callback);
+                    // PASO 2: Descargar traducciones en español (language=1 para español)
+                    downloadExerciseTranslations(allExercises, equipmentIds, callback);
                 } else {
-                    String errorMsg = "Error cargando ejercicios: " + response.code() + " - " + response.message();
+                    String errorMsg = "Error descargando metadatos de ejercicios: " + response.code() + " - " + response.message();
                     Log.e(TAG, errorMsg);
                     callback.onError(errorMsg);
                 }
@@ -215,35 +166,249 @@ public class FitnessRepository {
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<ExerciseResponse>> call, @NonNull Throwable t) {
-                Log.e(TAG, "Error en API de ejercicios", t);
-                callback.onError("Error de conexión: " + t.getMessage());
+                Log.e(TAG, "Error en API de ejercicios (metadatos)", t);
+                callback.onError("Error de conexión obteniendo metadatos: " + t.getMessage());
             }
         });
     }
 
-    // Método auxiliar para cargar todos los ejercicios
-    private void loadAllExercisesFromApi(DataCallback<List<Exercise>> callback) {
-        apiService.getExercisesWithLanguage(2, 2, 500).enqueue(new Callback<ApiResponse<ExerciseResponse>>() {
+    // PASO 2: Descargar traducciones
+    private void downloadExerciseTranslations(List<ExerciseResponse> exerciseMetadata,
+                                            List<Integer> equipmentIds,
+                                            DataCallback<List<Exercise>> callback) {
+
+        // Primero intentar español (language=1), si falla usar inglés (language=2)
+        apiService.getExerciseTranslations(1, 1000).enqueue(new Callback<ApiResponse<ExerciseTranslationResponse>>() {
             @Override
-            public void onResponse(@NonNull Call<ApiResponse<ExerciseResponse>> call,
-                                 @NonNull Response<ApiResponse<ExerciseResponse>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<ExerciseTranslationResponse>> call,
+                                 @NonNull Response<ApiResponse<ExerciseTranslationResponse>> response) {
+
+                List<ExerciseTranslationResponse> translations = new ArrayList<>();
+
                 if (response.isSuccessful() && response.body() != null) {
-                    List<ExerciseResponse> exerciseResponses = response.body().getResults();
-                    Log.d(TAG, "Ejercicios recibidos (sin filtro): " + exerciseResponses.size());
-                    processExercisesWithImages(exerciseResponses, callback);
+                    translations = response.body().getResults();
+                    Log.d(TAG, "PASO 2 - Traducciones en español obtenidas: " + translations.size());
                 } else {
-                    String errorMsg = "Error cargando ejercicios: " + response.code() + " - " + response.message();
-                    Log.e(TAG, errorMsg);
-                    callback.onError(errorMsg);
+                    Log.w(TAG, "No se pudieron obtener traducciones en español, intentando inglés...");
+                }
+
+                // Si no hay traducciones en español o son pocas, obtener también en inglés
+                if (translations.size() < 100) {
+                    downloadEnglishTranslations(exerciseMetadata, translations, equipmentIds, callback);
+                } else {
+                    // Proceder con las traducciones en español únicamente
+                    fuseExerciseDataWithTranslations(exerciseMetadata, translations, equipmentIds, callback);
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ApiResponse<ExerciseResponse>> call, @NonNull Throwable t) {
-                Log.e(TAG, "Error en API de ejercicios", t);
-                callback.onError("Error de conexión: " + t.getMessage());
+            public void onFailure(@NonNull Call<ApiResponse<ExerciseTranslationResponse>> call, @NonNull Throwable t) {
+                Log.w(TAG, "Error obteniendo traducciones en español, intentando inglés...", t);
+                // Si falla español, intentar inglés directamente
+                downloadEnglishTranslations(exerciseMetadata, new ArrayList<>(), equipmentIds, callback);
             }
         });
+    }
+
+    // PASO 2b: Descargar traducciones en inglés como fallback
+    private void downloadEnglishTranslations(List<ExerciseResponse> exerciseMetadata,
+                                           List<ExerciseTranslationResponse> spanishTranslations,
+                                           List<Integer> equipmentIds,
+                                           DataCallback<List<Exercise>> callback) {
+
+        apiService.getExerciseTranslations(2, 1000).enqueue(new Callback<ApiResponse<ExerciseTranslationResponse>>() {
+            @Override
+            public void onResponse(@NonNull Call<ApiResponse<ExerciseTranslationResponse>> call,
+                                 @NonNull Response<ApiResponse<ExerciseTranslationResponse>> response) {
+
+                List<ExerciseTranslationResponse> allTranslations = new ArrayList<>(spanishTranslations);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    List<ExerciseTranslationResponse> englishTranslations = response.body().getResults();
+                    Log.d(TAG, "PASO 2b - Traducciones en inglés obtenidas: " + englishTranslations.size());
+
+                    // Agregar traducciones en inglés que no estén ya en español
+                    for (ExerciseTranslationResponse englishTrans : englishTranslations) {
+                        boolean exists = false;
+                        for (ExerciseTranslationResponse spanishTrans : spanishTranslations) {
+                            if (spanishTrans.getExerciseId() == englishTrans.getExerciseId()) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) {
+                            allTranslations.add(englishTrans);
+                        }
+                    }
+                } else {
+                    Log.w(TAG, "Error obteniendo traducciones en inglés: " + response.code());
+                }
+
+                Log.d(TAG, "Total traducciones combinadas: " + allTranslations.size());
+                fuseExerciseDataWithTranslations(exerciseMetadata, allTranslations, equipmentIds, callback);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ApiResponse<ExerciseTranslationResponse>> call, @NonNull Throwable t) {
+                Log.e(TAG, "Error obteniendo traducciones en inglés", t);
+                // Continuar sin traducciones si todo falla
+                fuseExerciseDataWithTranslations(exerciseMetadata, spanishTranslations, equipmentIds, callback);
+            }
+        });
+    }
+
+    // PASO 3: Fusionar metadatos de ejercicios con traducciones
+    private void fuseExerciseDataWithTranslations(List<ExerciseResponse> exerciseMetadata,
+                                                List<ExerciseTranslationResponse> translations,
+                                                List<Integer> equipmentIds,
+                                                DataCallback<List<Exercise>> callback) {
+
+        Log.d(TAG, "PASO 3 - Fusionando " + exerciseMetadata.size() + " ejercicios con " + translations.size() + " traducciones");
+
+        // Crear un mapa de traducciones por exerciseId para acceso rápido
+        java.util.Map<Integer, ExerciseTranslationResponse> translationMap = new java.util.HashMap<>();
+        for (ExerciseTranslationResponse translation : translations) {
+            if (translation.getName() != null && !translation.getName().trim().isEmpty()) {
+                translationMap.put(translation.getExerciseId(), translation);
+            }
+        }
+
+        Log.d(TAG, "Mapa de traducciones creado con " + translationMap.size() + " entradas válidas");
+
+        // Fusionar datos: crear Exercise directamente con datos combinados
+        List<Exercise> fusedExercises = new ArrayList<>();
+
+        for (ExerciseResponse metadata : exerciseMetadata) {
+            // Verificar si tiene traducción
+            ExerciseTranslationResponse translation = translationMap.get(metadata.getId());
+
+            if (translation != null) {
+                // Verificar filtro de equipamiento (si se especificó)
+                boolean matchesEquipment = true;
+
+                if (equipmentIds != null && !equipmentIds.isEmpty()) {
+                    matchesEquipment = false;
+                    if (metadata.getEquipment() != null && !metadata.getEquipment().isEmpty()) {
+                        for (Integer equipmentId : equipmentIds) {
+                            if (metadata.getEquipment().contains(equipmentId)) {
+                                matchesEquipment = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (matchesEquipment) {
+                    // Crear Exercise directamente con datos fusionados
+                    Exercise fusedExercise = new Exercise();
+                    fusedExercise.setId(metadata.getId());
+                    fusedExercise.setName(translation.getName()); // ¡NOMBRE DESDE TRADUCCIÓN!
+                    fusedExercise.setDescription(translation.getDescription() != null ?
+                        translation.getDescription() : metadata.getDescription());
+                    fusedExercise.setMuscleIds(metadata.getMuscles());
+                    fusedExercise.setEquipmentIds(metadata.getEquipment());
+                    fusedExercise.setCategoryId(metadata.getCategory());
+                    // La imagen se agregará después en processExercisesWithImages
+
+                    fusedExercises.add(fusedExercise);
+
+                    Log.d(TAG, "Ejercicio fusionado: ID=" + metadata.getId() +
+                          ", Nombre='" + translation.getName() + "'" +
+                          ", Músculos=" + (metadata.getMuscles() != null ? metadata.getMuscles().size() : 0) +
+                          ", Equipamiento=" + (metadata.getEquipment() != null ? metadata.getEquipment().size() : 0));
+                }
+            }
+        }
+
+        Log.d(TAG, "Ejercicios fusionados y filtrados: " + fusedExercises.size());
+
+        if (fusedExercises.isEmpty()) {
+            callback.onError("No se encontraron ejercicios con nombres válidos para tu equipamiento seleccionado");
+            return;
+        }
+
+        // PASO 4: Procesar imágenes para los ejercicios fusionados
+        processExercisesWithImagesDirectly(fusedExercises, callback);
+    }
+
+    // Nuevo método para procesar imágenes directamente con objetos Exercise
+    private void processExercisesWithImagesDirectly(List<Exercise> exercises,
+                                                   DataCallback<List<Exercise>> callback) {
+        List<Exercise> exercisesWithImages = new ArrayList<>();
+        int totalExercises = exercises.size();
+        int[] processedCount = {0};
+
+        if (totalExercises == 0) {
+            callback.onSuccess(exercisesWithImages);
+            return;
+        }
+
+        Log.d(TAG, "PASO 4 - Procesando imágenes para " + totalExercises + " ejercicios (SOLO se incluirán los que tengan imagen)");
+
+        for (Exercise exercise : exercises) {
+            // Verificar si el ejercicio tiene imagen
+            apiService.getExerciseImages(exercise.getId(), true)
+                .enqueue(new Callback<ApiResponse<ExerciseImageResponse>>() {
+                @Override
+                public void onResponse(@NonNull Call<ApiResponse<ExerciseImageResponse>> call,
+                                     @NonNull Response<ApiResponse<ExerciseImageResponse>> response) {
+                    synchronized (exercisesWithImages) {
+                        if (response.isSuccessful() && response.body() != null &&
+                            !response.body().getResults().isEmpty()) {
+
+                            // SOLO agregar ejercicio SI TIENE imagen válida
+                            String imageUrl = response.body().getResults().get(0).getImage();
+                            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                                exercise.setImageUrl(imageUrl);
+                                exercisesWithImages.add(exercise);
+
+                                Log.d(TAG, "✓ Ejercicio CON imagen agregado: " + exercise.getName() +
+                                      " - URL: " + imageUrl);
+                            } else {
+                                Log.w(TAG, "✗ Ejercicio descartado (imagen vacía): " + exercise.getName());
+                            }
+                        } else {
+                            // NO incluir ejercicio sin imagen
+                            Log.w(TAG, "✗ Ejercicio descartado (sin imagen): " + exercise.getName());
+                        }
+
+                        processedCount[0]++;
+                        if (processedCount[0] == totalExercises) {
+                            Log.d(TAG, "PASO 4 COMPLETADO - Ejercicios con imagen: " + exercisesWithImages.size() + "/" + totalExercises);
+
+                            if (exercisesWithImages.isEmpty()) {
+                                callback.onError("No se encontraron ejercicios con imágenes válidas para tu equipamiento seleccionado");
+                                return;
+                            }
+
+                            // Obtener nombres de músculos y guardar
+                            loadMuscleNamesForExercises(exercisesWithImages, callback);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ApiResponse<ExerciseImageResponse>> call,
+                                    @NonNull Throwable t) {
+                    synchronized (exercisesWithImages) {
+                        // NO incluir ejercicio si falla la carga de imagen
+                        Log.w(TAG, "✗ Ejercicio descartado (error obteniendo imagen): " + exercise.getName(), t);
+
+                        processedCount[0]++;
+                        if (processedCount[0] == totalExercises) {
+                            Log.d(TAG, "PASO 4 COMPLETADO - Ejercicios con imagen: " + exercisesWithImages.size() + "/" + totalExercises);
+
+                            if (exercisesWithImages.isEmpty()) {
+                                callback.onError("No se encontraron ejercicios con imágenes válidas para tu equipamiento seleccionado");
+                                return;
+                            }
+
+                            loadMuscleNamesForExercises(exercisesWithImages, callback);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     private void processExercisesWithImages(List<ExerciseResponse> exerciseResponses,
