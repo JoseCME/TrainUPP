@@ -32,6 +32,13 @@ public interface SerieHistorialDao {
            "ORDER BY fecha_entrenamiento DESC, numero_serie ASC")
     List<SerieHistorial> getHistorialCompleto(int exerciseId);
 
+    // Eliminar una serie específica por número y fecha de sesión
+    @Query("DELETE FROM serie_historial " +
+           "WHERE exercise_id = :exerciseId " +
+           "AND numero_serie = :numeroSerie " +
+           "AND fecha_entrenamiento = :fechaEntrenamiento")
+    void eliminarSeriePorNumeroYFecha(int exerciseId, int numeroSerie, long fechaEntrenamiento);
+
     // Eliminar series más antiguas (mantener solo las últimas N sesiones)
     @Query("DELETE FROM serie_historial " +
            "WHERE exercise_id = :exerciseId " +

@@ -834,18 +834,50 @@ public class FitnessRepository {
     public void guardarSeriesEjercicio(int exerciseId, List<Serie> series, DataCallback<Boolean> callback) {
         executor.execute(() -> {
             try {
-                long fechaActual = System.currentTimeMillis();
+                // CRÍTICO: Usar la misma fecha para toda la sesión de entrenamiento
+                // Buscar si ya hay series guardadas hoy para este ejercicio
+                List<SerieHistorial> seriesExistentesHoy = database.serieHistorialDao().getUltimasSeriesEjercicio(exerciseId);
+
+                long fechaSesion;
+                if (seriesExistentesHoy != null && !seriesExistentesHoy.isEmpty()) {
+                    // Ya hay series de hoy, usar la misma fecha de sesión
+                    fechaSesion = seriesExistentesHoy.get(0).getFechaEntrenamiento();
+                    Log.d(TAG, "Usando fecha de sesión existente: " + fechaSesion + " para ejercicio " + exerciseId);
+                } else {
+                    // Nueva sesión, crear nueva fecha
+                    fechaSesion = System.currentTimeMillis();
+                    Log.d(TAG, "Creando nueva sesión con fecha: " + fechaSesion + " para ejercicio " + exerciseId);
+                }
+
                 List<SerieHistorial> seriesHistorial = new ArrayList<>();
 
                 for (int i = 0; i < series.size(); i++) {
                     Serie serie = series.get(i);
-                    // Solo guardar series completadas
+                    // Solo guardar series completadas Y con datos válidos
                     if (serie.isCompletada()) {
+                        // NUEVA VALIDACIÓN: No guardar si peso=0 y repeticiones=0
+                        if (serie.getPeso() <= 0 && serie.getRepeticiones() <= 0) {
+                            Log.d(TAG, "Serie " + (i + 1) + " ignorada (peso=0 y reps=0) - preservando historial anterior para ejercicio " + exerciseId);
+                            continue; // Saltar esta serie, mantener historial anterior
+                        }
+
                         // CORREGIDO: Usar el numeroSerie de la serie en lugar del índice de la lista
                         int numeroSerieReal = serie.getNumeroSerie();
                         if (numeroSerieReal <= 0) {
                             // Fallback: si no tiene numeroSerie asignado, usar el índice
                             numeroSerieReal = i + 1;
+                        }
+
+                        // CRÍTICO: Verificar si ya existe una serie con este número en la sesión actual
+                        boolean serieYaExiste = false;
+                        if (seriesExistentesHoy != null) {
+                            for (SerieHistorial existente : seriesExistentesHoy) {
+                                if (existente.getNumeroSerie() == numeroSerieReal) {
+                                    serieYaExiste = true;
+                                    Log.d(TAG, "Serie " + numeroSerieReal + " ya existe en la sesión actual - será reemplazada");
+                                    break;
+                                }
+                            }
                         }
 
                         SerieHistorial serieHistorial = new SerieHistorial(
@@ -854,18 +886,30 @@ public class FitnessRepository {
                             serie.getPeso(),
                             serie.getRepeticiones(),
                             true,
-                            fechaActual
+                            fechaSesion // CRÍTICO: usar la misma fecha de sesión
                         );
                         seriesHistorial.add(serieHistorial);
 
-                        Log.d(TAG, "Guardando serie " + numeroSerieReal + " para ejercicio " + exerciseId +
-                              ": " + serie.getPeso() + " lbs, " + serie.getRepeticiones() + " reps");
+                        Log.d(TAG, "Preparando serie " + numeroSerieReal + " para ejercicio " + exerciseId +
+                              ": " + serie.getPeso() + " lbs, " + serie.getRepeticiones() + " reps (sesión: " + fechaSesion + ")");
                     }
                 }
 
                 if (!seriesHistorial.isEmpty()) {
+                    // CRÍTICO: Eliminar series existentes de esta sesión para los números que vamos a insertar
+                    for (SerieHistorial nuevaSerie : seriesHistorial) {
+                        database.serieHistorialDao().eliminarSeriePorNumeroYFecha(
+                            exerciseId,
+                            nuevaSerie.getNumeroSerie(),
+                            fechaSesion
+                        );
+                    }
+
+                    // Ahora insertar las nuevas series
                     database.serieHistorialDao().insertSeries(seriesHistorial);
-                    Log.d(TAG, "Guardadas " + seriesHistorial.size() + " series para ejercicio " + exerciseId);
+                    Log.d(TAG, "Guardadas " + seriesHistorial.size() + " series válidas para ejercicio " + exerciseId + " en sesión " + fechaSesion);
+                } else {
+                    Log.d(TAG, "No hay series válidas para guardar para ejercicio " + exerciseId + " - historial anterior preservado");
                 }
 
                 callback.onSuccess(true);
