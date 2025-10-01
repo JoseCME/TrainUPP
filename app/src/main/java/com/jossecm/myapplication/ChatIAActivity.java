@@ -683,27 +683,140 @@ public class ChatIAActivity extends AppCompatActivity {
         List<Exercise> ejerciciosGenerados = new ArrayList<>();
         String respuestaLower = respuesta.toLowerCase();
 
-        android.util.Log.d(TAG, "Generando ejercicios nuevos desde respuesta de " + respuesta.length() + " caracteres");
+        android.util.Log.d(TAG, "Analizando respuesta para detectar recomendaciones de ejercicios nuevos");
 
-        // Detectar si la respuesta menciona ejercicios o recomendaciones
-        String[] patronesRecomendacion = {
-            "te recomiendo", "ejercicios recomendados", "puedes hacer", "deberías hacer",
-            "intenta", "practica", "realiza", "haz", "ejercicio", "entrenamiento"
+        // MEJORADO: Patrones más específicos para detectar recomendaciones reales de ejercicios
+        String[] patronesRecomendacionEspecificos = {
+            "te recomiendo estos ejercicios",
+            "ejercicios recomendados para ti",
+            "nuevos ejercicios que puedes agregar",
+            "aquí tienes algunos ejercicios",
+            "ejercicios que deberías incluir",
+            "te sugiero agregar estos ejercicios",
+            "podrías incluir estos ejercicios",
+            "ejercicios adicionales que te ayudarán",
+            "considera agregar estos ejercicios",
+            "estos ejercicios serían perfectos para",
+            // NUEVOS PATRONES MÁS AMPLIOS
+            "te propongo agregar",
+            "propongo agregar los siguientes ejercicios",
+            "para complementar esta rutina",
+            "te recomiendo hacer",
+            "puedes probar",
+            "te gustaría probar",
+            "añadir a tu rutina",
+            "incluir en tu entrenamiento",
+            "complementar con",
+            "agregar también"
         };
 
-        boolean esRecomendacion = false;
-        for (String patron : patronesRecomendacion) {
+        // MEJORADO: Patrones más amplios que indican que NO es una recomendación de ejercicios nuevos
+        String[] patronesExclusion = {
+            "los ejercicios que tienes",
+            "tu rutina actual",
+            "ejercicios que ya haces",
+            "ejercicios existentes",
+            "análisis de tu rutina",
+            "sobre tu entrenamiento actual",
+            "la rutina que me has proporcionado",
+            "parece ser una buena base",
+            "hay algunas consideraciones",
+            "debemos tener en cuenta",
+            "en cuanto a la",
+            "en lugar de hacer",
+            "podrías variar",
+            "mi sugerencia es que",
+            "recomiendo que",
+            "por ahora"
+        };
+
+        // Verificar primero si es una exclusión (conversación sobre rutina actual)
+        boolean esExclusion = false;
+        String patronExclusion = "";
+        for (String patron : patronesExclusion) {
             if (respuestaLower.contains(patron)) {
-                esRecomendacion = true;
+                esExclusion = true;
+                patronExclusion = patron;
+                android.util.Log.d(TAG, "Detectada conversación sobre rutina actual con patrón: " + patron);
                 break;
             }
         }
 
-        if (!esRecomendacion) {
-            return ejerciciosGenerados;
+        if (esExclusion) {
+            android.util.Log.d(TAG, "❌ Excluyendo generación por patrón: " + patronExclusion);
+            return ejerciciosGenerados; // Lista vacía
         }
 
-        // Generar ejercicios basándose en el contenido de la respuesta
+        // Verificar si es una recomendación específica de ejercicios nuevos
+        boolean esRecomendacionEspecifica = false;
+        String patronDetectado = "";
+        for (String patron : patronesRecomendacionEspecificos) {
+            if (respuestaLower.contains(patron)) {
+                esRecomendacionEspecifica = true;
+                patronDetectado = patron;
+                android.util.Log.d(TAG, "Detectada recomendación específica de ejercicios nuevos: " + patron);
+                break;
+            }
+        }
+
+        // MEJORADO: Detectar menciones directas de ejercicios específicos SOLO si hay contexto de recomendación
+        if (!esRecomendacionEspecifica) {
+            // Buscar patrones que indiquen ejercicios específicos mencionados junto con contexto de recomendación
+            String[] patronesEjerciciosEspecificos = {
+                "sentadillas",
+                "peso muerto",
+                "press de banca",
+                "dominadas",
+                "flexiones",
+                "planchas",
+                "remo",
+                "curl",
+                "extensions"
+            };
+
+            // NUEVA VALIDACIÓN: Solo considerar ejercicios específicos si hay palabras de recomendación cerca
+            String[] palabrasRecomendacion = {
+                "recomiendo",
+                "sugiero",
+                "propongo",
+                "te ayudarán",
+                "deberías probar",
+                "puedes hacer",
+                "sería bueno",
+                "perfecto para ti"
+            };
+
+            for (String ejercicio : patronesEjerciciosEspecificos) {
+                if (respuestaLower.contains(ejercicio)) {
+                    // Verificar si hay palabras de recomendación cerca del ejercicio mencionado
+                    boolean hayContextoRecomendacion = false;
+                    for (String palabraRec : palabrasRecomendacion) {
+                        if (respuestaLower.contains(palabraRec)) {
+                            hayContextoRecomendacion = true;
+                            break;
+                        }
+                    }
+
+                    if (hayContextoRecomendacion) {
+                        esRecomendacionEspecifica = true;
+                        patronDetectado = "mención de ejercicio con contexto de recomendación: " + ejercicio;
+                        android.util.Log.d(TAG, "Detectada mención de ejercicio con contexto de recomendación: " + ejercicio);
+                        break;
+                    } else {
+                        android.util.Log.d(TAG, "❌ Ejercicio mencionado sin contexto de recomendación: " + ejercicio);
+                    }
+                }
+            }
+        }
+
+        // Solo generar ejercicios si la respuesta es realmente una recomendación específica
+        if (!esRecomendacionEspecifica) {
+            android.util.Log.d(TAG, "❌ No se detectó recomendación específica de ejercicios nuevos");
+            return ejerciciosGenerados; // Lista vacía
+        }
+
+        // Si llegamos aquí, es una recomendación real de ejercicios nuevos
+        android.util.Log.d(TAG, "✅ Generando ejercicios basados en patrón: " + patronDetectado);
         ejerciciosGenerados.addAll(generarEjerciciosDeRespuesta(respuesta));
 
         android.util.Log.d(TAG, "Total de ejercicios generados: " + ejerciciosGenerados.size());
@@ -716,6 +829,12 @@ public class ChatIAActivity extends AppCompatActivity {
 
         // Detectar menciones de grupos musculares y tipos de ejercicios
         Map<String, List<String>> ejerciciosPorMusculo = detectarEjerciciosPorMusculo(respuesta);
+
+        // MEJORADO: Solo generar ejercicios si se detectaron músculos específicos mencionados
+        if (ejerciciosPorMusculo.isEmpty()) {
+            android.util.Log.d(TAG, "No se detectaron músculos específicos en la respuesta, no generar ejercicios");
+            return ejercicios; // Lista vacía
+        }
 
         int ejercicioId = 9000 + (int)(System.currentTimeMillis() % 1000); // ID único temporal
 
@@ -730,21 +849,19 @@ public class ChatIAActivity extends AppCompatActivity {
                 android.util.Log.d(TAG, "Ejercicio generado: " + ejercicioNuevo.getName() +
                                  " - Músculos: " + ejercicioNuevo.getMuscleNames());
 
-                // Limitar a máximo 4 ejercicios por respuesta
-                if (ejercicios.size() >= 4) {
+                // Limitar a máximo 3 ejercicios por respuesta
+                if (ejercicios.size() >= 3) {
                     break;
                 }
             }
 
-            if (ejercicios.size() >= 4) {
+            if (ejercicios.size() >= 3) {
                 break;
             }
         }
 
-        // Si no se detectaron ejercicios específicos, generar ejercicios genéricos
-        if (ejercicios.isEmpty()) {
-            ejercicios.addAll(generarEjerciciosGenericos(ejercicioId));
-        }
+        // ELIMINADO: Ya no generar ejercicios genéricos automáticamente
+        // Ahora solo se generan ejercicios cuando hay patrones específicos detectados
 
         return ejercicios;
     }
