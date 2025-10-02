@@ -15,6 +15,55 @@
         app:titleTextColor="@android:color/white"
         app:navigationIcon="@android:drawable/ic_menu_revert" />
 
+    <!-- Controles de búsqueda y filtrado -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:background="@android:color/white"
+        android:elevation="2dp">
+
+        <!-- Barra de búsqueda -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:startIconDrawable="@android:drawable/ic_menu_search"
+            app:endIconMode="clear_text"
+            app:hintTextAppearance="@style/TextAppearance.AppCompat.Small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSearchExercises"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Buscar ejercicios por nombre..."
+                android:inputType="text"
+                android:maxLines="1"
+                android:imeOptions="actionSearch" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Filtro por músculo -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            app:startIconDrawable="@android:drawable/ic_menu_preferences">
+
+            <AutoCompleteTextView
+                android:id="@+id/spinnerMuscleFilter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Filtrar por músculo..."
+                android:inputType="none"
+                android:focusable="false" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
     <!-- Lista de ejercicios -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewExercises"

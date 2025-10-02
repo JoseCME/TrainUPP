@@ -15,6 +15,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.card.MaterialCardView;
 import com.jossecm.myapplication.R;
 import com.jossecm.myapplication.models.Exercise;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,10 +23,12 @@ import java.util.Set;
 public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder> {
 
     private List<Exercise> exerciseList;
+    private List<Exercise> exerciseListFull; // Lista completa para filtrado
     private Set<Integer> selectedExerciseIds = new HashSet<>();
 
     public ExerciseAdapter(List<Exercise> exerciseList) {
         this.exerciseList = exerciseList;
+        this.exerciseListFull = new ArrayList<>(exerciseList); // Copia completa
     }
 
     @NonNull
@@ -54,6 +57,131 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.Exerci
     public void clearSelection() {
         selectedExerciseIds.clear();
         notifyDataSetChanged();
+    }
+
+    // NUEVOS MÉTODOS PARA FILTRADO
+
+    /**
+     * Actualizar la lista completa de ejercicios (cuando se cargan nuevos datos)
+     */
+    public void updateExercises(List<Exercise> newExercises) {
+        this.exerciseListFull = new ArrayList<>(newExercises);
+        this.exerciseList = new ArrayList<>(newExercises);
+        notifyDataSetChanged();
+    }
+
+    /**
+     * Aplicar filtro por nombre de ejercicio
+     */
+    public void filterByName(String searchQuery) {
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            // Sin filtro - mostrar todos
+            exerciseList = new ArrayList<>(exerciseListFull);
+        } else {
+            // Aplicar filtro de búsqueda
+            List<Exercise> filteredList = new ArrayList<>();
+            String searchLower = searchQuery.toLowerCase().trim();
+
+            for (Exercise exercise : exerciseListFull) {
+                if (exercise.getName() != null &&
+                    exercise.getName().toLowerCase().contains(searchLower)) {
+                    filteredList.add(exercise);
+                }
+            }
+
+            exerciseList = filteredList;
+        }
+
+        notifyDataSetChanged();
+        android.util.Log.d("ExerciseAdapter", "Filtro aplicado: '" + searchQuery +
+                          "' - Mostrando " + exerciseList.size() + " de " + exerciseListFull.size());
+    }
+
+    /**
+     * Aplicar filtro por músculo específico
+     */
+    public void filterByMuscle(int muscleId) {
+        if (muscleId <= 0) {
+            // Sin filtro de músculo - mostrar todos
+            exerciseList = new ArrayList<>(exerciseListFull);
+        } else {
+            // Aplicar filtro de músculo
+            List<Exercise> filteredList = new ArrayList<>();
+
+            for (Exercise exercise : exerciseListFull) {
+                if (exercise.getMuscleIds() != null) {
+                    for (Integer exMuscleId : exercise.getMuscleIds()) {
+                        if (exMuscleId.equals(muscleId)) {
+                            filteredList.add(exercise);
+                            break; // No agregar duplicados
+                        }
+                    }
+                }
+            }
+
+            exerciseList = filteredList;
+        }
+
+        notifyDataSetChanged();
+        android.util.Log.d("ExerciseAdapter", "Filtro por músculo " + muscleId +
+                          " aplicado - Mostrando " + exerciseList.size() + " de " + exerciseListFull.size());
+    }
+
+    /**
+     * Aplicar filtros combinados (nombre + músculo)
+     */
+    public void applyFilters(String searchQuery, int muscleId) {
+        List<Exercise> filteredList = new ArrayList<>();
+
+        for (Exercise exercise : exerciseListFull) {
+            boolean matchesName = true;
+            boolean matchesMuscle = true;
+
+            // Filtro por nombre
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                String searchLower = searchQuery.toLowerCase().trim();
+                matchesName = exercise.getName() != null &&
+                             exercise.getName().toLowerCase().contains(searchLower);
+            }
+
+            // Filtro por músculo
+            if (muscleId > 0) {
+                matchesMuscle = false;
+                if (exercise.getMuscleIds() != null) {
+                    for (Integer exMuscleId : exercise.getMuscleIds()) {
+                        if (exMuscleId.equals(muscleId)) {
+                            matchesMuscle = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (matchesName && matchesMuscle) {
+                filteredList.add(exercise);
+            }
+        }
+
+        exerciseList = filteredList;
+        notifyDataSetChanged();
+
+        android.util.Log.d("ExerciseAdapter", "Filtros combinados aplicados: '" + searchQuery +
+                          "' + músculo " + muscleId + " - Mostrando " + exerciseList.size() +
+                          " de " + exerciseListFull.size());
+    }
+
+    /**
+     * Obtener el número total de ejercicios (sin filtros)
+     */
+    public int getTotalCount() {
+        return exerciseListFull.size();
+    }
+
+    /**
+     * Obtener el número de ejercicios filtrados actualmente
+     */
+    public int getFilteredCount() {
+        return exerciseList.size();
     }
 
     class ExerciseViewHolder extends RecyclerView.ViewHolder {

@@ -12,7 +12,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -972,6 +974,138 @@ public class FitnessRepository {
             } catch (Exception e) {
                 Log.e(TAG, "Error cargando configuración de series desde BD", e);
                 callback.onSuccess(3); // Valor por defecto en caso de error
+            }
+        });
+    }
+
+    // NUEVOS MÉTODOS PARA BÚSQUEDA Y FILTRADO DE EJERCICIOS
+
+    /**
+     * Buscar ejercicios por nombre (filtrado local)
+     */
+    public void searchExercisesByName(String searchQuery, DataCallback<List<Exercise>> callback) {
+        executor.execute(() -> {
+            try {
+                List<Exercise> allExercises = database.exerciseDao().getAllExercises();
+                List<Exercise> filteredExercises = new ArrayList<>();
+
+                if (searchQuery == null || searchQuery.trim().isEmpty()) {
+                    filteredExercises = allExercises;
+                } else {
+                    String searchLower = searchQuery.toLowerCase().trim();
+                    for (Exercise exercise : allExercises) {
+                        if (exercise.getName() != null &&
+                            exercise.getName().toLowerCase().contains(searchLower)) {
+                            filteredExercises.add(exercise);
+                        }
+                    }
+                }
+
+                Log.d(TAG, "Búsqueda '" + searchQuery + "': " + filteredExercises.size() + " ejercicios encontrados");
+                callback.onSuccess(filteredExercises);
+            } catch (Exception e) {
+                Log.e(TAG, "Error buscando ejercicios por nombre", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Filtrar ejercicios por músculo específico
+     */
+    public void getExercisesByMuscle(int muscleId, DataCallback<List<Exercise>> callback) {
+        executor.execute(() -> {
+            try {
+                List<Exercise> exercisesByMuscle = database.exerciseDao().getExercisesByMuscle(muscleId);
+                Log.d(TAG, "Filtro por músculo ID " + muscleId + ": " + exercisesByMuscle.size() + " ejercicios encontrados");
+                callback.onSuccess(exercisesByMuscle);
+            } catch (Exception e) {
+                Log.e(TAG, "Error filtrando ejercicios por músculo", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Buscar y filtrar ejercicios combinando nombre y músculo
+     */
+    public void searchAndFilterExercises(String searchQuery, Integer muscleId, DataCallback<List<Exercise>> callback) {
+        executor.execute(() -> {
+            try {
+                List<Exercise> allExercises = database.exerciseDao().getAllExercises();
+                List<Exercise> filteredExercises = new ArrayList<>();
+
+                for (Exercise exercise : allExercises) {
+                    boolean matchesName = true;
+                    boolean matchesMuscle = true;
+
+                    // Filtro por nombre
+                    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                        String searchLower = searchQuery.toLowerCase().trim();
+                        matchesName = exercise.getName() != null &&
+                                     exercise.getName().toLowerCase().contains(searchLower);
+                    }
+
+                    // Filtro por músculo
+                    if (muscleId != null && muscleId > 0) {
+                        matchesMuscle = false;
+                        if (exercise.getMuscleIds() != null) {
+                            for (Integer exMuscleId : exercise.getMuscleIds()) {
+                                if (exMuscleId.equals(muscleId)) {
+                                    matchesMuscle = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (matchesName && matchesMuscle) {
+                        filteredExercises.add(exercise);
+                    }
+                }
+
+                Log.d(TAG, "Búsqueda combinada '" + searchQuery + "' + músculo " + muscleId +
+                      ": " + filteredExercises.size() + " ejercicios encontrados");
+                callback.onSuccess(filteredExercises);
+            } catch (Exception e) {
+                Log.e(TAG, "Error en búsqueda combinada", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Obtener todos los músculos únicos de los ejercicios (para el spinner)
+     */
+    public void getMusclesFromExercises(DataCallback<List<Muscle>> callback) {
+        executor.execute(() -> {
+            try {
+                // Obtener todos los músculos de la base de datos
+                List<Muscle> allMuscles = database.muscleDao().getAllMuscles();
+
+                // Obtener IDs de músculos que realmente tienen ejercicios
+                List<Exercise> allExercises = database.exerciseDao().getAllExercises();
+                Set<Integer> usedMuscleIds = new HashSet<>();
+
+                for (Exercise exercise : allExercises) {
+                    if (exercise.getMuscleIds() != null) {
+                        usedMuscleIds.addAll(exercise.getMuscleIds());
+                    }
+                }
+
+                // Filtrar solo músculos que tienen ejercicios
+                List<Muscle> availableMuscles = new ArrayList<>();
+                for (Muscle muscle : allMuscles) {
+                    if (usedMuscleIds.contains(muscle.getId())) {
+                        availableMuscles.add(muscle);
+                    }
+                }
+
+                Log.d(TAG, "Músculos disponibles para filtro: " + availableMuscles.size());
+                callback.onSuccess(availableMuscles);
+            } catch (Exception e) {
+                Log.e(TAG, "Error obteniendo músculos disponibles", e);
+                callback.onError(e.getMessage());
             }
         });
     }

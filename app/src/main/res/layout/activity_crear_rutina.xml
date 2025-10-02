@@ -15,11 +15,61 @@
         app:navigationIcon="@drawable/ic_arrow_back"
         app:title="Crear rutina" />
 
+    <!-- Controles de búsqueda y filtrado -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:background="@android:color/white"
+        android:elevation="2dp">
+
+        <!-- Barra de búsqueda -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:startIconDrawable="@android:drawable/ic_menu_search"
+            app:endIconMode="clear_text"
+            app:hintTextAppearance="@style/TextAppearance.AppCompat.Small">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSearchExercises"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Buscar ejercicios por nombre..."
+                android:inputType="text"
+                android:maxLines="1"
+                android:imeOptions="actionSearch" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Filtro por músculo -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            app:startIconDrawable="@android:drawable/ic_menu_preferences">
+
+            <AutoCompleteTextView
+                android:id="@+id/spinnerMuscleFilter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Filtrar por músculo..."
+                android:inputType="none"
+                android:focusable="false" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
     <!-- Loading Layout -->
     <LinearLayout
         android:id="@+id/layoutLoading"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:gravity="center"
         android:orientation="vertical"
         android:visibility="visible">
@@ -41,16 +91,20 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewExercises"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
         android:visibility="gone" />
 
     <!-- Empty Layout -->
     <LinearLayout
         android:id="@+id/layoutEmpty"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:gravity="center"
         android:orientation="vertical"
+        android:padding="32dp"
         android:visibility="gone">
 
         <TextView
@@ -62,10 +116,11 @@
             android:layout_marginBottom="8dp" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Descarga ejercicios primero"
-            android:textSize="14sp" />
+            android:text="Parece que aún no se han descargado ejercicios. Vuelve a la configuración para seleccionar tu equipamiento."
+            android:textSize="14sp"
+            android:gravity="center" />
 
     </LinearLayout>
 
