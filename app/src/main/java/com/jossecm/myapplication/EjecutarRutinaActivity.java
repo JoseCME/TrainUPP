@@ -393,11 +393,11 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
                 public void onSuccess(Boolean success) {
                     runOnUiThread(() -> {
                         if (success) {
-                            Toast.makeText(EjecutarRutinaActivity.this,
-                                    "✅ Rutina completada y guardada", Toast.LENGTH_SHORT).show();
                             android.util.Log.d("EjecutarRutinaActivity",
                                 "Entrenamiento finalizado y guardado correctamente");
-                            finish();
+
+                            // NUEVO: Lanzar actividad de celebración en lugar de mostrar toast
+                            lanzarActividadCelebracion();
                         } else {
                             Toast.makeText(EjecutarRutinaActivity.this,
                                     "Error guardando entrenamiento", Toast.LENGTH_SHORT).show();
@@ -419,6 +419,37 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
         } catch (Exception e) {
             android.util.Log.e("EjecutarRutinaActivity", "Error guardando historial general", e);
             Toast.makeText(this, "Error procesando datos del entrenamiento", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // NUEVO: Método para lanzar la actividad de celebración
+    private void lanzarActividadCelebracion() {
+        try {
+            Intent intent = new Intent(this, CelebrationActivity.class);
+
+            // Pasar datos de la rutina completada
+            intent.putExtra("rutina_nombre", rutina.getNombre());
+            intent.putExtra("duracion_minutos", tiempoTranscurridoSegundos / 60);
+            intent.putExtra("volumen_total", volumenTotal);
+
+            android.util.Log.d("EjecutarRutinaActivity",
+                "Lanzando actividad de celebración - Rutina: " + rutina.getNombre() +
+                ", Duración: " + (tiempoTranscurridoSegundos / 60) + " min" +
+                ", Volumen: " + volumenTotal + " lbs");
+
+            startActivity(intent);
+
+            // Animación de transición suave hacia arriba
+            overridePendingTransition(R.anim.slide_up, R.anim.fade_out);
+
+            // Finalizar esta actividad después de un pequeño delay
+            new Handler().postDelayed(() -> finish(), 300);
+
+        } catch (Exception e) {
+            android.util.Log.e("EjecutarRutinaActivity", "Error lanzando actividad de celebración", e);
+            // Fallback: mostrar toast y cerrar actividad
+            Toast.makeText(this, "✅ Rutina completada y guardada", Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 

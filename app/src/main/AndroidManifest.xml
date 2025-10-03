@@ -80,6 +80,14 @@
             android:screenOrientation="unspecified"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout" />
 
+        <!-- CelebrationActivity - Animación de celebración al completar rutina -->
+        <activity
+            android:name=".CelebrationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyApplication.Fullscreen"
+            android:screenOrientation="unspecified"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
     </application>
 
 </manifest>

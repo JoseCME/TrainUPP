@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="light_gray">#F5F5F5</color>
+    <color name="purple_700">#3700B3</color>
+
 
     <!-- Colores para el sistema de chat -->
     <color name="chat_background">#F0F0F0</color>
