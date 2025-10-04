@@ -85,8 +85,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:src="@drawable/ic_add"
-        app:tint="@android:color/white" />
+        android:src="@drawable/rutina"
+        android:contentDescription="@string/crear_rutina"
+        app:tint="@null"
+        app:maxImageSize="32dp" />
 
     <!-- FloatingActionButton para música -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -96,8 +98,10 @@
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="88dp"
-        android:src="@drawable/ic_music_note"
+        android:src="@drawable/musica"
+        android:contentDescription="@string/seleccionar_musica"
         android:backgroundTint="#D1B3FF"
-        app:tint="@android:color/white" />
+        app:tint="@null"
+        app:maxImageSize="32dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

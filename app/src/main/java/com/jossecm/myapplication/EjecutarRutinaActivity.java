@@ -113,9 +113,16 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
         recyclerViewEjercicios = findViewById(R.id.recyclerViewEjercicios);
         layoutLoading = findViewById(R.id.layoutLoading);
         layoutEmpty = findViewById(R.id.layoutEmpty);
-        fabChatIA = findViewById(R.id.fabChatIA); // Inicializar FAB de chat de IA
+        fabChatIA = findViewById(R.id.fabChatIA);
+        FloatingActionButton fabVideosYouTube = findViewById(R.id.fabVideosYouTube); // NUEVO: FAB para videos de YouTube
 
         repository = new FitnessRepository(this);
+
+        // NUEVO: Configurar click listener para videos de YouTube
+        fabVideosYouTube.setOnClickListener(v -> {
+            Intent intent = new Intent(EjecutarRutinaActivity.this, BuscarVideosYouTubeActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void setupToolbar() {

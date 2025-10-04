@@ -10,4 +10,21 @@
     <string name="deseas_eliminar_serie">¿Deseas eliminar la Serie %1$d?</string>
     <string name="no_se_puede_eliminar_minimo_series">No se puede eliminar. Mínimo 3 series requeridas.</string>
     <string name="serie_eliminada_reorganizadas">Serie eliminada ✓ Series reorganizadas</string>
+
+    <!-- Strings para perfil -->
+    <string name="profile_image_description">Foto de perfil del usuario</string>
+    <string name="select_profile_image">Seleccionar imagen de perfil</string>
+    <string name="choose_from_gallery">Elegir de galería</string>
+    <string name="take_photo">Tomar foto</string>
+    <string name="cancel">Cancelar</string>
+    <string name="permission_denied">Permiso denegado</string>
+    <string name="camera_permission_required">Se requiere permiso de cámara para tomar fotos</string>
+    <string name="storage_permission_required">Se requiere permiso de almacenamiento para seleccionar imágenes</string>
+    <string name="error_loading_image">Error al cargar la imagen</string>
+    <string name="profile_image_updated">Imagen de perfil actualizada</string>
+
+    <!-- Strings para iconos y botones -->
+    <string name="crear_rutina">Crear nueva rutina</string>
+    <string name="seleccionar_musica">Seleccionar música</string>
+    <string name="ia_coach_icon">Icono del Coach IA</string>
 </resources>

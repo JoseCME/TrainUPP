@@ -65,6 +65,9 @@ dependencies {
     // Media library for music notifications
     implementation("androidx.media:media:1.7.0")
 
+    // WebView for YouTube player
+    implementation("androidx.webkit:webkit:1.8.0")
+
     // Navigation
     implementation("androidx.navigation:navigation-fragment:2.7.6")
     implementation("androidx.navigation:navigation-ui:2.7.6")

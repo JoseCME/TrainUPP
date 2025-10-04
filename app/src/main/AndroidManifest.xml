@@ -7,6 +7,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Permisos para foto de perfil -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -16,16 +24,33 @@
         android:theme="@style/Theme.MyApplication"
         tools:targetApi="31">
 
-        <!-- MainActivity - Actividad principal -->
+        <!-- PresentacionAppActivity - Primera pantalla de presentación -->
         <activity
-            android:name=".MainActivity"
+            android:name=".PresentacionAppActivity"
             android:exported="true"
             android:theme="@style/Theme.MyApplication"
+            android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <!-- VentajasAppActivity - Segunda pantalla de presentación -->
+        <activity
+            android:name=".VentajasAppActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyApplication"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <!-- MainActivity - Actividad principal (SIN LAUNCHER) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyApplication"
+            android:configChanges="orientation|screenSize|keyboardHidden">
         </activity>
 
         <!-- OnboardingActivity - Configuración inicial -->
@@ -114,12 +139,48 @@
                 android:value=".MainActivity" />
         </activity>
 
+        <!-- BuscarVideosYouTubeActivity - Búsqueda de videos de YouTube -->
+        <activity
+            android:name=".BuscarVideosYouTubeActivity"
+            android:exported="false"
+            android:parentActivityName=".EjecutarRutinaActivity"
+            android:theme="@style/Theme.MyApplication"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".EjecutarRutinaActivity" />
+        </activity>
+
+        <!-- VideoPlayerActivity - Reproductor de videos de YouTube -->
+        <activity
+            android:name=".VideoPlayerActivity"
+            android:exported="false"
+            android:parentActivityName=".BuscarVideosYouTubeActivity"
+            android:theme="@style/Theme.MyApplication"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".BuscarVideosYouTubeActivity" />
+        </activity>
+
         <!-- MusicService - Servicio de reproducción de música en segundo plano -->
         <service
             android:name=".services.MusicService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="true" />
+
+        <!-- FileProvider para compartir archivos de forma segura (cámara) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

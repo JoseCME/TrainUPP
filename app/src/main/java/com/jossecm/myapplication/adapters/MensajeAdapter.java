@@ -139,6 +139,9 @@ public class MensajeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             tvMensajeTexto.setText(mensaje.getTexto());
             tvTiempo.setText(mensaje.getTimeFormatted());
 
+            // Asegurar que el icono de IA siempre se muestre
+            ivAvatarIA.setImageResource(R.drawable.icono_ia);
+
             // NUEVO: Manejar ejercicios recomendados
             if (mensaje.isTieneEjerciciosRecomendados() && mensaje.getEjerciciosRecomendados() != null) {
                 layoutEjerciciosRecomendados.setVisibility(View.VISIBLE);

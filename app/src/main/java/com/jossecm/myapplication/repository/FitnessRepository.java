@@ -29,6 +29,11 @@ public class FitnessRepository {
         void onError(String error);
     }
 
+    public interface OperationCallback {
+        void onSuccess();
+        void onError(String error);
+    }
+
     public FitnessRepository(Context context) {
         database = AppDatabase.getDatabase(context);
         apiService = ApiClient.getApiService();
@@ -53,6 +58,19 @@ public class FitnessRepository {
                 User user = database.userDao().getCurrentUser();
                 callback.onSuccess(user);
             } catch (Exception e) {
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    public void updateUser(User user, OperationCallback callback) {
+        executor.execute(() -> {
+            try {
+                database.userDao().update(user);
+                Log.d(TAG, "Usuario actualizado correctamente - ID: " + user.getId());
+                callback.onSuccess();
+            } catch (Exception e) {
+                Log.e(TAG, "Error actualizando usuario", e);
                 callback.onError(e.getMessage());
             }
         });

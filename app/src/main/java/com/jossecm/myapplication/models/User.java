@@ -38,6 +38,8 @@ public class User {
     private int daysPerWeek; // Días que el usuario puede entrenar por semana
     private int workoutDuration; // Duración preferida en minutos (30, 45, 60, etc.)
 
+    private byte[] profileImage;
+
     // Constructor vacío requerido por Room
     public User() {}
 
@@ -163,6 +165,14 @@ public class User {
 
     public void setWorkoutDuration(int workoutDuration) {
         this.workoutDuration = workoutDuration;
+    }
+
+    public byte[] getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(byte[] profileImage) {
+        this.profileImage = profileImage;
     }
 
     // Métodos auxiliares para compatibilidad con fragmentos existentes

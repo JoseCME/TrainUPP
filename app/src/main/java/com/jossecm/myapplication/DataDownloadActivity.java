@@ -1,6 +1,7 @@
 package com.jossecm.myapplication;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,6 +21,8 @@ import java.util.List;
 
 public class DataDownloadActivity extends AppCompatActivity {
     private static final String TAG = "DataDownloadActivity";
+    private static final String PREFS_NAME = "com.jossecm.myapplication.PREFS";
+    private static final String KEY_ONBOARDING_COMPLETED = "onboarding_completed";
 
     private TextView tvDownloadStatus;
     private TextView tvProgressText;
@@ -285,7 +288,12 @@ public class DataDownloadActivity extends AppCompatActivity {
 
         // Opción para reintentar o continuar
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            // Marcar onboarding como completado incluso si hay error
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, true).apply();
+
             Intent intent = new Intent(DataDownloadActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
         }, 3000);
