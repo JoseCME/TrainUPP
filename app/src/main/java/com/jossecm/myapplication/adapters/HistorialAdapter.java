@@ -16,9 +16,18 @@ import java.util.Locale;
 public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.ViewHolder> {
 
     private List<HistorialEntrenamiento> historialList;
+    private OnHistorialClickListener clickListener;
+
+    public interface OnHistorialClickListener {
+        void onHistorialClick(HistorialEntrenamiento historial);
+    }
 
     public HistorialAdapter(List<HistorialEntrenamiento> historialList) {
         this.historialList = historialList;
+    }
+
+    public void setOnHistorialClickListener(OnHistorialClickListener listener) {
+        this.clickListener = listener;
     }
 
     @NonNull
@@ -52,6 +61,13 @@ public class HistorialAdapter extends RecyclerView.Adapter<HistorialAdapter.View
             textViewFecha = itemView.findViewById(R.id.textViewFecha);
             textViewDuracion = itemView.findViewById(R.id.textViewDuracion);
             textViewVolumen = itemView.findViewById(R.id.textViewVolumen);
+
+            // Configurar click en toda la tarjeta
+            itemView.setOnClickListener(v -> {
+                if (clickListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    clickListener.onHistorialClick(historialList.get(getAdapterPosition()));
+                }
+            });
         }
 
         public void bind(HistorialEntrenamiento historial) {

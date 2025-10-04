@@ -291,65 +291,65 @@ public class EjercicioRutinaAdapter extends RecyclerView.Adapter<EjercicioRutina
         }
     }
 
-    public JSONObject getEjerciciosRealizadosJson() {
+    public String getEjerciciosRealizadosJson() {
         try {
-            JSONObject resultado = new JSONObject();
             JSONArray ejerciciosArray = new JSONArray();
 
             for (Exercise exercise : exercises) {
                 List<Serie> series = seriesPorEjercicio.get(exercise.getId());
-                if (series != null) {
+                if (series != null && !series.isEmpty()) {
                     JSONObject ejercicioObj = new JSONObject();
-                    ejercicioObj.put("ejercicio_id", exercise.getId());
+                    // CORREGIDO: Usar "exerciseId" en lugar de "ejercicio_id"
+                    ejercicioObj.put("exerciseId", exercise.getId());
                     ejercicioObj.put("nombre", exercise.getName());
-
-                    // NUEVO: Guardar configuración de series
-                    Integer numConfiguracion = numSeriesConfiguradas.get(exercise.getId());
-                    int numSeriesConfiguracion = (numConfiguracion != null) ? numConfiguracion : 3;
-                    ejercicioObj.put("num_series_configuradas", numSeriesConfiguracion);
 
                     JSONArray seriesArray = new JSONArray();
 
-                    // Solo tomar las series configuradas (no las de historial) para el JSON
+                    // Obtener configuración de series
+                    Integer numConfiguracion = numSeriesConfiguradas.get(exercise.getId());
+                    int numSeriesConfiguracion = (numConfiguracion != null) ? numConfiguracion : 3;
+
+                    // Procesar todas las series configuradas
                     int maxSeries = Math.min(numSeriesConfiguracion, series.size());
 
                     for (int i = 0; i < maxSeries; i++) {
                         Serie serie = series.get(i);
                         if (serie.isCompletada()) {
                             JSONObject serieObj = new JSONObject();
+                            serieObj.put("numeroSerie", i + 1); // AGREGADO
                             serieObj.put("peso", serie.getPeso());
                             serieObj.put("repeticiones", serie.getRepeticiones());
-                            serieObj.put("volumen", serie.getVolumen());
+                            serieObj.put("completada", true); // AGREGADO
                             seriesArray.put(serieObj);
 
                             android.util.Log.d("EjercicioRutinaAdapter",
-                                "JSON - Serie nueva añadida para ejercicio " + exercise.getId() +
-                                " - Serie " + (i+1) + ": " + serie.getPeso() + " lbs, " +
+                                "JSON - Serie añadida: Ejercicio " + exercise.getId() +
+                                ", Serie " + (i+1) + ": " + serie.getPeso() + " lbs × " +
                                 serie.getRepeticiones() + " reps");
                         }
                     }
 
-                    if (seriesArray.length() > 0 || numSeriesConfiguracion > 3) {
+                    // CORREGIDO: Solo agregar ejercicios que tengan al menos una serie completada
+                    if (seriesArray.length() > 0) {
                         ejercicioObj.put("series", seriesArray);
                         ejerciciosArray.put(ejercicioObj);
 
                         android.util.Log.d("EjercicioRutinaAdapter",
-                            "JSON - ✓ Agregado ejercicio " + exercise.getId() + " con " +
-                            seriesArray.length() + " series completadas y " + numSeriesConfiguracion + " series configuradas");
+                            "JSON - ✓ Agregado ejercicio " + exercise.getName() + " (ID: " + exercise.getId() +
+                            ") con " + seriesArray.length() + " series completadas");
                     }
                 }
             }
 
-            resultado.put("ejercicios", ejerciciosArray);
-
             android.util.Log.d("EjercicioRutinaAdapter",
-                "JSON final - Total ejercicios en JSON: " + ejerciciosArray.length());
+                "JSON FINAL - Total ejercicios con series: " + ejerciciosArray.length());
 
-            return resultado;
+            // CORREGIDO: Retornar el string del array directamente, no un objeto envolvente
+            return ejerciciosArray.toString();
 
         } catch (Exception e) {
-            android.util.Log.e("EjercicioRutinaAdapter", "Error creando JSON", e);
-            return new JSONObject();
+            android.util.Log.e("EjercicioRutinaAdapter", "Error creando JSON de ejercicios", e);
+            return "[]"; // Retornar array vacío en caso de error
         }
     }
 

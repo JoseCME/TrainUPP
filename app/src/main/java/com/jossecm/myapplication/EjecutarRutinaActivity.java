@@ -96,8 +96,12 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
                 return insets;
             });
         } else {
-            // Para versiones anteriores
-            getWindow().setDecorFitsSystemWindows(true);
+            // Para versiones anteriores a Android 11 (API < 30)
+            // Usar flags del sistema para un comportamiento compatible
+            getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            );
         }
     }
 
@@ -377,15 +381,19 @@ public class EjecutarRutinaActivity extends AppCompatActivity {
     private void guardarHistorialGeneral() {
         try {
             // Obtener datos del entrenamiento para el historial general
-            JSONObject ejerciciosRealizados = ejercicioAdapter.getEjerciciosRealizadosJson();
+            // CORREGIDO: Ahora getEjerciciosRealizadosJson() retorna String directamente
+            String ejerciciosRealizados = ejercicioAdapter.getEjerciciosRealizadosJson();
             int duracionMinutos = tiempoTranscurridoSegundos / 60;
+
+            android.util.Log.d("EjecutarRutinaActivity",
+                "Guardando historial - JSON de ejercicios: " + ejerciciosRealizados);
 
             HistorialEntrenamiento historial = new HistorialEntrenamiento(
                     rutina.getId(),
                     rutina.getNombre(),
                     duracionMinutos,
                     volumenTotal,
-                    ejerciciosRealizados.toString()
+                    ejerciciosRealizados // Ya es String, no necesita .toString()
             );
 
             repository.insertHistorialEntrenamiento(historial, new FitnessRepository.DataCallback<Boolean>() {

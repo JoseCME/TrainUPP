@@ -59,6 +59,12 @@ dependencies {
     // Glide for image loading
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
+    // Picasso for music album images
+    implementation("com.squareup.picasso:picasso:2.71828")
+
+    // Media library for music notifications
+    implementation("androidx.media:media:1.7.0")
+
     // Navigation
     implementation("androidx.navigation:navigation-fragment:2.7.6")
     implementation("androidx.navigation:navigation-ui:2.7.6")
@@ -72,6 +78,9 @@ dependencies {
 
     // Lottie for animations
     implementation("com.airbnb.android:lottie:6.2.0")
+
+    // MPAndroidChart for graphs
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

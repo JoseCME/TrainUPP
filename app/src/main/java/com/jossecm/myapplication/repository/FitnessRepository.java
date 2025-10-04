@@ -1109,4 +1109,53 @@ public class FitnessRepository {
             }
         });
     }
+
+    // NUEVOS MÉTODOS PARA DETALLE DE HISTORIAL
+
+    /**
+     * Obtener historial por ID
+     */
+    public void getHistorialById(long historialId, DataCallback<HistorialEntrenamiento> callback) {
+        executor.execute(() -> {
+            try {
+                HistorialEntrenamiento historial = database.historialEntrenamientoDao().getHistorialById(historialId);
+                callback.onSuccess(historial);
+            } catch (Exception e) {
+                Log.e(TAG, "Error obteniendo historial por ID", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Obtener series por fecha de entrenamiento
+     */
+    public void getSeriesPorFecha(long fechaEntrenamiento, DataCallback<List<SerieHistorial>> callback) {
+        executor.execute(() -> {
+            try {
+                List<SerieHistorial> series = database.serieHistorialDao().getSeriesPorFecha(fechaEntrenamiento);
+                Log.d(TAG, "Series cargadas para fecha " + fechaEntrenamiento + ": " + series.size());
+                callback.onSuccess(series);
+            } catch (Exception e) {
+                Log.e(TAG, "Error obteniendo series por fecha", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Obtener ejercicios por lista de IDs
+     */
+    public void getExercisesByIds(List<Integer> exerciseIds, DataCallback<List<Exercise>> callback) {
+        executor.execute(() -> {
+            try {
+                List<Exercise> exercises = database.exerciseDao().getExercisesByIds(exerciseIds);
+                Log.d(TAG, "Ejercicios cargados por IDs: " + exercises.size());
+                callback.onSuccess(exercises);
+            } catch (Exception e) {
+                Log.e(TAG, "Error obteniendo ejercicios por IDs", e);
+                callback.onError(e.getMessage());
+            }
+        });
+    }
 }

@@ -1,5 +1,6 @@
 package com.jossecm.myapplication.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.jossecm.myapplication.DetalleHistorialActivity;
 import com.jossecm.myapplication.R;
 import com.jossecm.myapplication.adapters.HistorialAdapter;
 import com.jossecm.myapplication.models.HistorialEntrenamiento;
@@ -58,6 +60,15 @@ public class HistorialFragment extends Fragment {
 
     private void setupRecyclerView() {
         historialAdapter = new HistorialAdapter(historialList);
+
+        // Configurar listener de clicks
+        historialAdapter.setOnHistorialClickListener(historial -> {
+            // Abrir DetalleHistorialActivity
+            Intent intent = new Intent(getActivity(), DetalleHistorialActivity.class);
+            intent.putExtra("historial_id", historial.getId());
+            startActivity(intent);
+        });
+
         recyclerViewHistorial.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerViewHistorial.setAdapter(historialAdapter);
     }

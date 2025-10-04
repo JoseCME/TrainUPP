@@ -50,4 +50,10 @@ public interface SerieHistorialDao {
            "    LIMIT :limiteSesiones" +
            ")")
     void limpiarHistorialAntiguo(int exerciseId, int limiteSesiones);
+
+    // NUEVO: Obtener todas las series de una fecha específica
+    @Query("SELECT * FROM serie_historial " +
+           "WHERE fecha_entrenamiento = :fechaEntrenamiento " +
+           "ORDER BY exercise_id ASC, numero_serie ASC")
+    List<SerieHistorial> getSeriesPorFecha(long fechaEntrenamiento);
 }

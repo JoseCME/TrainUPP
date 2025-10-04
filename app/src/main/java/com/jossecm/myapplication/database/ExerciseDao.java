@@ -40,5 +40,7 @@ public interface ExerciseDao {
 
     @Query("SELECT COUNT(*) FROM exercises")
     int getExerciseCount();
-}
 
+    @Query("SELECT * FROM exercises WHERE id IN (:exerciseIds)")
+    List<Exercise> getExercisesByIds(List<Integer> exerciseIds);
+}

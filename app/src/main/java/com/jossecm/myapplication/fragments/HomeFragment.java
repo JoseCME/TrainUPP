@@ -27,6 +27,7 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerViewRutinas;
     private LinearLayout layoutLoading, layoutEmpty;
     private FloatingActionButton fabCrearRutina;
+    private FloatingActionButton fabMusica; // NUEVO
     private RutinaAdapter rutinaAdapter;
     private FitnessRepository repository;
     private List<Rutina> rutinaList = new ArrayList<>();
@@ -60,6 +61,7 @@ public class HomeFragment extends Fragment {
         layoutLoading = view.findViewById(R.id.layoutLoading);
         layoutEmpty = view.findViewById(R.id.layoutEmpty);
         fabCrearRutina = view.findViewById(R.id.fabCrearRutina);
+        fabMusica = view.findViewById(R.id.fabMusica); // NUEVO
 
         repository = new FitnessRepository(requireContext());
     }
@@ -81,6 +83,12 @@ public class HomeFragment extends Fragment {
         fabCrearRutina.setOnClickListener(v -> {
             // Navegación a CrearRutinaActivity
             Intent intent = new Intent(getActivity(), CrearRutinaActivity.class);
+            startActivity(intent);
+        });
+
+        // NUEVO: Configurar FAB de música
+        fabMusica.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), com.jossecm.myapplication.SeleccionCancionesActivity.class);
             startActivity(intent);
         });
     }
